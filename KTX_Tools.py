@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Tools",
     "author": "Roel Koster",
-    "version": (2, 0),
+    "version": (3, 0),
     "blender": (2, 7, 0),
     "location": "View3D > Tools",
     "category": "3D View"}
@@ -1182,6 +1182,336 @@ class KTXObjLib(bpy.types.Operator):
         scn.objects.link(obj)
       return {'FINISHED'}
 
+class KTXBottle(bpy.types.Operator):
+    bl_idname="wm.ktx_bottle_1"
+    bl_label="KTX Create a Bottle and Cap"
+    bl_options={'REGISTER','UNDO', 'PRESET'}
+
+    hide_bottle = bpy.props.BoolProperty(name="Hide Bottle",
+        description="Hide Bottle On/Off",
+        default=False)
+    hide_cap = bpy.props.BoolProperty(name="Hide Cap",
+        description="Hide Cap On/Off",
+        default=False)
+
+    overall_scale = bpy.props.FloatProperty(name="Overall Scale",
+        description="Overall Scale",
+        default=0.01)
+    thread_height = bpy.props.FloatProperty(name="Thread Height",
+        description="Thread Height",
+        default=1.0)
+    thread_steps = bpy.props.IntProperty(name="Thread Steps",
+        description="Thread Steps",
+        default=23)
+    neck_diameter = bpy.props.FloatProperty(name="Neck Diameter",
+        description="Neck Diameter",
+        default=2.0)
+    trap = bpy.props.FloatProperty(name="Trapezium Thread",
+        description="Trapezium Thread",
+        default=0.15)
+    depth = bpy.props.FloatProperty(name="Depth",
+        description="Depth",
+        default=0.44)
+    eoff_onoff = bpy.props.BoolProperty(name="Extra Offset",
+        description="Extra Offset On/Off",
+        default=False)
+    eoffset = bpy.props.FloatProperty(name="Extra Offset Distance",
+        description="Extra Offset",
+        default=0.01)
+    remdoub_onoff = bpy.props.BoolProperty(name="Remove Doubles",
+        description="Remove Doubles On/Off",
+        default=True)
+    doubles = bpy.props.FloatProperty(name="Merge Verts Dist",
+        description="Merge Verts Dist",
+        default=0.01)
+    smooth_onoff = bpy.props.BoolProperty(name="Smoothing",
+        description="Smoothing Doubles On/Off",
+        default=True)
+    subs_onoff = bpy.props.BoolProperty(name="SubSurf On/Off",
+        description="SubSurf On/Off",
+        default=True)
+    nl = bpy.props.FloatProperty(name="Neck Length",
+        description="Neck Length",
+        default=0.1)
+    x1 = bpy.props.FloatProperty(name="x1",
+        description="x1",
+        default=4.0)
+    z1 = bpy.props.FloatProperty(name="z1",
+        description="z1",
+        default=3.0)
+    x2 = bpy.props.FloatProperty(name="x2",
+        description="x2",
+        default=4.0)
+    z2 = bpy.props.FloatProperty(name="z2",
+        description="z2",
+        default=5.0)
+    x3 = bpy.props.FloatProperty(name="x3",
+        description="x3",
+        default=3.4)
+    z3 = bpy.props.FloatProperty(name="z3",
+        description="z3",
+        default=15.0)
+    x4 = bpy.props.FloatProperty(name="x4",
+        description="x4",
+        default=2.0)
+    z4 = bpy.props.FloatProperty(name="z4",
+        description="z4",
+        default=15.0)
+    x5 = bpy.props.FloatProperty(name="x5",
+        description="x5",
+        default=1.2)
+    z5 = bpy.props.FloatProperty(name="z5",
+        description="z5",
+        default=15.0)
+    tl = bpy.props.FloatProperty(name="Top Length",
+        description="Top Length",
+        default=0.5)
+    tt = bpy.props.FloatProperty(name="Top Tickness",
+        description="Top Tickness",
+        default=0.45)
+
+    x6 = bpy.props.FloatProperty(name="x6",
+        description="x6",
+        default=3.5)
+    z6 = bpy.props.FloatProperty(name="z6",
+        description="z6",
+        default=2.0)
+    x7 = bpy.props.FloatProperty(name="x7",
+        description="x7",
+        default=3.5)
+    z7 = bpy.props.FloatProperty(name="z7",
+        description="z7",
+        default=12.0)
+    x8 = bpy.props.FloatProperty(name="x8",
+        description="x8",
+        default=1.9)
+    z8 = bpy.props.FloatProperty(name="z8",
+        description="z8",
+        default=14.0)
+
+    x9 = bpy.props.FloatProperty(name="x9",
+        description="x9",
+        default=1.9)
+    z9 = bpy.props.FloatProperty(name="z9",
+        description="z9",
+        default=4.5)
+    x10 = bpy.props.FloatProperty(name="x10",
+        description="x10",
+        default=1.9)
+    z10 = bpy.props.FloatProperty(name="z10",
+        description="z10",
+        default=5.0)
+
+
+    def execute(self,context):
+       import math, bmesh
+       from math import radians
+#------midden
+       bm=bmesh.new()
+       v1=bm.verts.new((self.neck_diameter, 0.0, self.thread_height))
+       v2=bm.verts.new((self.neck_diameter, 0.0, 0.0))
+       bm.edges.new((v1,v2))
+       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       gg=bm.faces[:]
+       if self.eoff_onoff and self.eoffset != 0.0:
+           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+#----------Bottom
+       v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       geom_new = ret["geom"]
+       del ret
+       verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
+       bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,-0.5))
+       bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
+#---------BottleBody
+       v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
+       v2=bm.verts.new((self.neck_diameter, 0.0, -self.nl))
+       v3=bm.verts.new((self.neck_diameter+self.x1, 0.0, -self.z1))
+       v4=bm.verts.new((self.neck_diameter+self.x2, 0.0, -self.z2))
+       v5=bm.verts.new((self.neck_diameter+self.x3, 0.0, -self.z3))
+       v6=bm.verts.new((self.neck_diameter+self.x4, 0.0, -self.z4))
+       v7=bm.verts.new((self.neck_diameter+self.x5, 0.0, -self.z5))
+       v8=bm.verts.new((0.0, 0.0, -self.z5))
+       bm.edges.new((v1,v2))
+       bm.edges.new((v2,v3))
+       bm.edges.new((v3,v4))
+       bm.edges.new((v4,v5))
+       bm.edges.new((v5,v6))
+       bm.edges.new((v6,v7))
+       bm.edges.new((v7,v8))
+       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#----------Top
+       aa=((self.thread_steps/20)+1.0)*self.thread_height
+       bb=self.thread_steps%20
+       v1=bm.verts.new((self.neck_diameter, 0.0, aa)) #5.0
+       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       geom_new = ret["geom"]
+       del ret
+       verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
+       bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
+       ret_boven=bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,aa))
+#---------BottleInside
+       v1=bm.verts.new((self.neck_diameter, 0.0, aa))
+       v2=bm.verts.new((self.neck_diameter, 0.0, aa+self.tl))
+
+       v3=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa+self.tl))
+       v3a=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa-self.tl))
+
+       v4=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.0))
+       v4a=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.2))
+
+       v5=bm.verts.new((self.neck_diameter+self.x6, 0.0, -self.z6))
+       v6=bm.verts.new((self.neck_diameter+self.x7, 0.0, -self.z7))
+       v7=bm.verts.new((self.neck_diameter+self.x8, 0.0, -self.z8))
+       v8=bm.verts.new((0.0, 0.0, -self.z8))
+       bm.edges.new((v8,v7))
+       bm.edges.new((v7,v6))
+       bm.edges.new((v6,v5))
+       bm.edges.new((v5,v4a))
+       bm.edges.new((v4a,v4))
+       bm.edges.new((v4,v3a))
+       bm.edges.new((v3a,v3))
+       bm.edges.new((v3,v2))
+       bm.edges.new((v2,v1))
+
+       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#---------Generate Bottle
+       
+       if self.remdoub_onoff and self.doubles != 0.0:
+           bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=self.doubles)
+
+       bmesh.ops.scale(bm,vec=(self.overall_scale,self.overall_scale,self.overall_scale),verts=bm.verts[:])
+
+       me = bpy.data.meshes.new("Bottle_Mesh")
+       bm.to_mesh(me)
+       bm.free()
+       if self.smooth_onoff:
+           pols = me.polygons
+           for p in pols:
+               p.use_smooth = True
+
+       scene = bpy.context.scene
+       obj = bpy.data.objects.new("Bottle", me)
+       obj.location = bpy.context.scene.cursor_location
+       obj.location.z = (obj.location.z + self.z5)*self.overall_scale
+       scene.objects.link(obj)
+       if self.subs_onoff:
+           obj.modifiers.new("subd", type='SUBSURF')
+           obj.modifiers['subd'].levels = 3
+
+       bpy.context.scene.objects.active = obj
+       if self.hide_bottle:
+           bpy.context.object.hide = True
+       else:
+           bpy.context.object.hide = False
+
+
+#------Dop/Cap
+#------Draad/Thread
+       bm=bmesh.new()
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, self.thread_height))
+       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
+       bm.edges.new((v2,v1))
+       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       gg=bm.faces[:]
+       if self.eoff_onoff and self.eoffset != 0.0:
+           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+#----------Bottom
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       geom_new = ret["geom"]
+       del ret
+       verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
+       bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,-0.5))
+       bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
+#----------Top
+       aa=((self.thread_steps/20)+1.0)*self.thread_height
+       bb=self.thread_steps%20
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa)) #5.0
+       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bm.edges.ensure_lookup_table()
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       geom_new = ret["geom"]
+       del ret
+       verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
+       bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
+       ret_boven=bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,aa))
+#---------Cap Inside
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa))
+       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa+self.tl))
+       v3=bm.verts.new((self.neck_diameter+self.depth-self.tt, 0.0, aa+self.tl))
+       v4=bm.verts.new((0.0, 0.0, aa+self.tl))
+       bm.edges.new((v4,v3))
+       bm.edges.new((v3,v2))
+       bm.edges.new((v2,v1))
+       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#---------CapBody
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
+       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, -self.nl))
+       v3=bm.verts.new((self.neck_diameter+self.depth+self.tt, 0.0, self.nl))
+       v4=bm.verts.new((self.neck_diameter+self.depth+self.x9, 0.0, self.z9))
+       v5=bm.verts.new((self.neck_diameter+self.depth+self.x10, 0.0, self.z10))
+       v6=bm.verts.new((0.0, 0.0, self.z10))
+       bm.edges.new((v6,v5))
+       bm.edges.new((v5,v4))
+       bm.edges.new((v4,v3))
+       bm.edges.new((v3,v2))
+       bm.edges.new((v2,v1))
+       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+
+
+#---------Generate Cap
+       
+       if self.remdoub_onoff and self.doubles != 0.0:
+           bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=self.doubles)
+
+       bmesh.ops.scale(bm,vec=(self.overall_scale,self.overall_scale,self.overall_scale),verts=bm.verts[:])
+
+       me = bpy.data.meshes.new("Cap_Mesh")
+       bm.to_mesh(me)
+       bm.free()
+       if self.smooth_onoff:
+           pols = me.polygons
+           for p in pols:
+               p.use_smooth = True
+
+       scene = bpy.context.scene
+       obj = bpy.data.objects.new("Cap", me)
+       obj.location = bpy.context.scene.cursor_location
+       obj.location.z = (obj.location.z + self.thread_height/2 + self.z5)*self.overall_scale
+       scene.objects.link(obj)
+       if self.subs_onoff:
+           obj.modifiers.new("subd", type='SUBSURF')
+           obj.modifiers['subd'].levels = 3
+       
+       bpy.context.scene.objects.active = obj
+       bpy.ops.object.mode_set(mode='EDIT')
+       bpy.ops.mesh.select_all(action='SELECT')
+       bpy.ops.mesh.normals_make_consistent(inside=False)
+       bpy.ops.object.editmode_toggle()
+
+       if self.hide_cap:
+           bpy.context.object.hide = True
+       else:
+           bpy.context.object.hide = False
+
+       return {'FINISHED'}
+
+
 class KTXPanel( bpy.types.Panel ):
     bl_label = "KosteX Tools"
     bl_space_type = "VIEW_3D"
@@ -1221,6 +1551,7 @@ class KTXPanel( bpy.types.Panel ):
         new_col().column().operator("wm.ktx_box_generate")
         new_col().column().operator("wm.ktx_convert_for_sculpt")
         new_col().column().operator("wm.ktx_polish")
+        new_col().column().operator("wm.ktx_bottle_1")
 
 
 def register():
