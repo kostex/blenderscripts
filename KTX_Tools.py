@@ -707,205 +707,6 @@ class KTXSpiralCircles(bpy.types.Operator):
        obj.data.update()
        return {'FINISHED'}
 
-class KTX2DMeshCanvas(bpy.types.Operator):
-    bl_idname = "wm.ktx_2d_mesh_canvas"
-    bl_label = "Create 2D Mesh Canvas"
-    bl_options = {'REGISTER','UNDO'}
-
-    def execute(self,context):
-        bpy.context.scene.layers[0] = True
-        i = 1
-        while i < 20:
-            bpy.context.scene.layers[i] = False
-            i = i + 1
-        bpy.context.scene.render.engine = 'BLENDER_GAME'
-        bpy.ops.mesh.primitive_plane_add(radius=1, view_align=False, enter_editmode=False, location=(0, 0, 0), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
-        bpy.ops.transform.rotate(value=-1.5708, axis=(-1, -2.22045e-016, -4.93038e-032), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=-1.5708, axis=(-0, -0, -1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.uv.unwrap(method='ANGLE_BASED', margin=0.02)
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        bpy.context.object.name = "2D Canvas"
-        bpy.data.objects['2D Canvas'].active_material = bpy.data.materials['DISP']
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                for space in area.spaces:
-                    if space.type == 'VIEW_3D':
-                        space.viewport_shade = 'TEXTURED'
-                        area.spaces[0].fx_settings.use_ssao = True
-        bpy.context.object.lock_location[0] = True
-        bpy.context.object.lock_rotation[0] = True
-        bpy.context.object.lock_rotation[2] = True
-        bpy.ops.object.modifier_add(type='SUBSURF')
-        bpy.context.object.modifiers["Subsurf"].subdivision_type = 'SIMPLE'
-        bpy.context.object.modifiers["Subsurf"].levels = 7
-        bpy.ops.object.modifier_add(type='DISPLACE')
-        bpy.context.object.modifiers["Displace"].mid_level = 0.1
-        bpy.context.object.modifiers["Displace"].strength = 0.1
-        bpy.ops.object.modifier_add(type='DISPLACE')
-        bpy.context.object.modifiers["Displace.001"].strength = 0.1
-        bpy.context.object.modifiers["Displace.001"].mid_level = 1
-        bpy.context.object.name = "2D"
-        bpy.data.objects['2D'].modifiers['Displace'].texture = bpy.data.textures['Disp']
-        bpy.ops.object.mode_set(mode = 'TEXTURE_PAINT')
-        bpy.context.object.active_material.paint_active_slot = 1
-        bpy.context.object.active_material.paint_active_slot = 1
-        bpy.context.object.active_material.active_texture_index = 1
-        return {'FINISHED'}
-
-class KTXMeshGenerate(bpy.types.Operator):
-    bl_idname = "wm.ktx_mesh_generate"
-    bl_label = "Create Mesh From 2D Mesh Canvas"
-    bl_options = {'REGISTER','UNDO'}
-
-    def execute(self,context):
-        bpy.ops.object.convert(target='MESH')
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.select_all(action = 'SELECT')
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(1, 0, 0), clear_inner=True, clear_outer=False, xstart=376, xend=381, ystart=133, yend=62)
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-        bpy.ops.object.modifier_add(type='MIRROR')
-        bpy.context.object.modifiers["Mirror"].use_clip = True
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Mirror")
-        bpy.ops.object.modifier_add(type='REMESH')
-        bpy.context.object.modifiers["Remesh"].mode = 'SMOOTH'
-        bpy.context.object.modifiers["Remesh"].octree_depth = 7
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
-        bpy.context.object.lock_rotation[0] = False
-        bpy.context.object.lock_rotation[1] = True
-        bpy.context.object.lock_rotation[2] = True
-        bpy.context.object.name = "tmpN"
-        bpy.data.objects['tmpN'].active_material = bpy.data.materials['matcapBrown']
-        bpy.context.object.name = "newMesh"
-        bpy.ops.object.location_clear()
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                for space in area.spaces:
-                    if space.type == 'VIEW_3D':
-                        space.viewport_shade = 'TEXTURED'
-                        area.spaces[0].fx_settings.use_ssao = True
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        bpy.ops.object.modifier_add(type='DECIMATE')
-        bpy.context.object.modifiers["Decimate"].ratio = 0.03
-        bpy.context.object.modifiers["Decimate"].use_collapse_triangulate = True
-        bpy.ops.object.modifier_add(type='BEVEL')
-        bpy.context.object.modifiers["Bevel"].segments = 2
-        bpy.context.object.modifiers["Bevel"].profile = 1
-        bpy.context.object.modifiers["Bevel"].limit_method = 'ANGLE'
-        bpy.context.object.modifiers["Bevel"].limit_method = 'ANGLE'
-        bpy.ops.object.modifier_remove(modifier="Subsurf")
-        bpy.ops.object.subdivision_set(level=2)
-        bpy.ops.object.convert(target='MESH')
-        bpy.ops.object.shade_smooth()
-        bpy.ops.object.mode_set(mode = 'SCULPT')
-        bpy.ops.sculpt.dynamic_topology_toggle()
-        bpy.ops.sculpt.symmetrize()
-        return {'FINISHED'}
-
-class KTXAddBaseMesh(bpy.types.Operator):
-    bl_idname = "wm.ktx_add_base_mesh"
-    bl_label = "Add Base Mesh"
-    bl_options = {'REGISTER','UNDO'}
-
-    def execute(self,context):
-        bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=(0, 0, 0), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
-        bpy.context.object.name = "BM"
-        bpy.ops.object.modifier_remove(modifier="Subsurf")
-        bpy.ops.object.subdivision_set(level=3)
-        bpy.ops.object.convert(target='MESH')
-        bpy.context.object.lock_location[0] = True
-        bpy.context.object.scale[1] = 0.5
-        bpy.context.object.scale[2] = 0.5
-        bpy.context.object.scale[0] = 0.5
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        bpy.ops.object.modifier_add(type='MIRROR')
-        bpy.context.scene.render.engine = 'BLENDER_GAME'
-        bpy.ops.object.select_pattern(pattern="BM")
-        bpy.context.scene.objects.active = bpy.data.objects["BM"]
-        bpy.data.objects['BM'].active_material = bpy.data.materials['matcapBrown']
-        return {'FINISHED'}
-
-class KTXBoxGenerate(bpy.types.Operator):
-    bl_idname = "wm.ktx_box_generate"
-    bl_label = "Generate Box"
-    bl_options = {'REGISTER','UNDO'}
-
-    def execute(self,context):
-        bpy.ops.object.location_clear()
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        bpy.ops.transform.translate(value=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":True, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-        bpy.ops.transform.translate(value=(1, 0, -1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=1.5708, axis=(0, 1, 1.34359e-007), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":True, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-        bpy.ops.transform.translate(value=(-1, 0, -1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=1.5708, axis=(0, 1, 1.34359e-007), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":True, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-        bpy.ops.transform.translate(value=(-1, -0, 1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=1.5708, axis=(0, 1, 1.34359e-007), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":True, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-        bpy.ops.transform.translate(value=(1, 1, 0), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=1.5708, axis=(-0, -0, -1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":True, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-        bpy.ops.transform.translate(value=(0, -2, 0), constraint_axis=(False, True, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        bpy.ops.transform.rotate(value=3.14159, axis=(-0, -0, -1), constraint_axis=(False, False, False), constraint_orientation='NORMAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-        return {'FINISHED'}
-
-class KTXConvertForSculpt(bpy.types.Operator):
-    bl_idname = "wm.ktx_convert_for_sculpt"
-    bl_label = "Convert for Sculpt"
-    bl_options = {'REGISTER','UNDO'}
-
-    def execute(self,context):
-        bpy.ops.object.join()
-        bpy.ops.object.modifier_add(type='BEVEL')
-        bpy.context.object.modifiers["Bevel"].segments = 2
-        bpy.context.object.modifiers["Bevel"].profile = 1
-        bpy.context.object.modifiers["Bevel"].limit_method = 'ANGLE'
-        bpy.context.object.modifiers["Bevel"].angle_limit = 0.525344
-        bpy.ops.object.modifier_add(type='SUBSURF')
-        bpy.ops.object.subdivision_set(level=4)
-        bpy.ops.object.convert(target='MESH')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.select_all(action = 'DESELECT')
-        bpy.ops.mesh.separate(type='LOOSE')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        i = 0
-        m = 'm'
-        x = 'x'
-        for obj in bpy.context.selected_objects:
-            bpy.context.scene.objects.active = obj
-            m = m + x
-            i = i + 1
-            bpy.context.object.name = m
-        bpy.ops.object.select_all(action= 'DESELECT')
-        bpy.ops.object.select_pattern(pattern="mx")
-        bpy.context.scene.objects.active = bpy.data.objects["mx"]
-        m = 'mx'
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.select_all(action = 'SELECT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        while i > 2:
-            i = i - 1
-            m = m + x
-            bpy.ops.object.select_pattern(pattern=m)
-            bpy.ops.object.join()
-            bpy.ops.object.mode_set(mode = 'EDIT')
-            bpy.ops.mesh.intersect_boolean(operation='UNION')
-            bpy.ops.mesh.select_all(action = 'SELECT')
-            bpy.ops.object.mode_set(mode = 'OBJECT')
-        m = m + x
-        bpy.ops.object.select_pattern(pattern=m)
-        bpy.ops.object.join()
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.intersect_boolean(operation='UNION')
-        bpy.ops.object.mode_set(mode = 'SCULPT')
-        bpy.ops.sculpt.dynamic_topology_toggle()
-        bpy.context.object.name = "sculpt ready"
-        bpy.data.objects['sculpt ready'].active_material = bpy.data.materials['matcapBrown']
-        return {'FINISHED'}
 
 class KTXPolish(bpy.types.Operator):
     bl_idname = "wm.ktx_polish"
@@ -1268,7 +1069,7 @@ class KTXBottle(bpy.types.Operator):
         default=15.0)
     tl = bpy.props.FloatProperty(name="Top Length",
         description="Top Length",
-        default=0.5)
+        default=0.1)
     tt = bpy.props.FloatProperty(name="Top Tickness",
         description="Top Tickness",
         default=0.45)
@@ -1314,7 +1115,6 @@ class KTXBottle(bpy.types.Operator):
        v1=bm.verts.new((self.neck_diameter, 0.0, self.thread_height))
        v2=bm.verts.new((self.neck_diameter, 0.0, 0.0))
        bm.edges.new((v1,v2))
-#       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
@@ -1324,7 +1124,6 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
-#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
@@ -1349,18 +1148,13 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v5,v6))
        bm.edges.new((v6,v7))
        bm.edges.new((v7,v8))
-#       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #----------Top
-#       aa=((self.thread_steps/20)+1.0)*self.thread_height
-#       bb=self.thread_steps%20
        aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
        bb=self.thread_steps%self.v
 
        v1=bm.verts.new((self.neck_diameter, 0.0, aa))
-#       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
        bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
-#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
@@ -1393,7 +1187,6 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
 
-#       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
 
 #---------Generate Bottle
@@ -1433,7 +1226,6 @@ class KTXBottle(bpy.types.Operator):
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, self.thread_height))
        v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
        bm.edges.new((v2,v1))
-#       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
@@ -1443,7 +1235,6 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
-#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
@@ -1453,14 +1244,10 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,-0.5))
        bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
 #----------Top
-#       aa=((self.thread_steps/20)+1.0)*self.thread_height
-#       bb=self.thread_steps%20
        aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
        bb=self.thread_steps%self.v
 
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa))
-#       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
-#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
@@ -1479,7 +1266,6 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v4,v3))
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
-#       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #---------CapBody
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
@@ -1493,7 +1279,6 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v4,v3))
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
-#       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
        bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
 
@@ -1568,12 +1353,6 @@ class KTXPanel( bpy.types.Panel ):
         new_col().column().operator("wm.ktx_spiral_circles")
         new_col().column().operator("wm.ktx_spirograph_2")
 
-# NOT MY TOOLS... and don't use them anymore...
-#        new_col().column().operator("wm.ktx_2d_mesh_canvas")
-#        new_col().column().operator("wm.ktx_mesh_generate")
-#        new_col().column().operator("wm.ktx_add_base_mesh")
-#        new_col().column().operator("wm.ktx_box_generate")
-#        new_col().column().operator("wm.ktx_convert_for_sculpt")
 
         new_col().column().operator("wm.ktx_polish")
         new_col().column().operator("wm.ktx_bottle_1")
