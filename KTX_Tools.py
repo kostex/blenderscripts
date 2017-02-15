@@ -1230,7 +1230,7 @@ class KTXBottle(bpy.types.Operator):
     smooth_onoff = bpy.props.BoolProperty(name="Smoothing",
         description="Smoothing Doubles On/Off",
         default=False)
-    subs_onoff = bpy.props.BoolProperty(name="SubSurf On/Off",
+    subs_onoff = bpy.props.BoolProperty(name="SubSurf",
         description="SubSurf On/Off",
         default=False)
     nl = bpy.props.FloatProperty(name="Neck Length",
@@ -1568,11 +1568,13 @@ class KTXPanel( bpy.types.Panel ):
         new_col().column().operator("wm.ktx_spiral_circles")
         new_col().column().operator("wm.ktx_spirograph_2")
 
-        new_col().column().operator("wm.ktx_2d_mesh_canvas")
-        new_col().column().operator("wm.ktx_mesh_generate")
-        new_col().column().operator("wm.ktx_add_base_mesh")
-        new_col().column().operator("wm.ktx_box_generate")
-        new_col().column().operator("wm.ktx_convert_for_sculpt")
+# NOT MY TOOLS... and don't use them anymore...
+#        new_col().column().operator("wm.ktx_2d_mesh_canvas")
+#        new_col().column().operator("wm.ktx_mesh_generate")
+#        new_col().column().operator("wm.ktx_add_base_mesh")
+#        new_col().column().operator("wm.ktx_box_generate")
+#        new_col().column().operator("wm.ktx_convert_for_sculpt")
+
         new_col().column().operator("wm.ktx_polish")
         new_col().column().operator("wm.ktx_bottle_1")
 
