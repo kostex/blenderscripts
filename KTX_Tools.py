@@ -1196,13 +1196,16 @@ class KTXBottle(bpy.types.Operator):
 
     overall_scale = bpy.props.FloatProperty(name="Overall Scale",
         description="Overall Scale",
-        default=0.01)
+        default=0.1)
+    v = bpy.props.IntProperty(name="Vertices",
+        description="Cylinder divided into this many Vertices",
+        default=12)
     thread_height = bpy.props.FloatProperty(name="Thread Height",
         description="Thread Height",
         default=1.0)
     thread_steps = bpy.props.IntProperty(name="Thread Steps",
         description="Thread Steps",
-        default=23)
+        default=12)
     neck_diameter = bpy.props.FloatProperty(name="Neck Diameter",
         description="Neck Diameter",
         default=2.0)
@@ -1226,10 +1229,10 @@ class KTXBottle(bpy.types.Operator):
         default=0.01)
     smooth_onoff = bpy.props.BoolProperty(name="Smoothing",
         description="Smoothing Doubles On/Off",
-        default=True)
+        default=False)
     subs_onoff = bpy.props.BoolProperty(name="SubSurf On/Off",
         description="SubSurf On/Off",
-        default=True)
+        default=False)
     nl = bpy.props.FloatProperty(name="Neck Length",
         description="Neck Length",
         default=0.1)
@@ -1272,13 +1275,13 @@ class KTXBottle(bpy.types.Operator):
 
     x6 = bpy.props.FloatProperty(name="x6",
         description="x6",
-        default=3.5)
+        default=1.25)
     z6 = bpy.props.FloatProperty(name="z6",
         description="z6",
         default=2.0)
     x7 = bpy.props.FloatProperty(name="x7",
         description="x7",
-        default=3.5)
+        default=2.7)
     z7 = bpy.props.FloatProperty(name="z7",
         description="z7",
         default=12.0)
@@ -1311,7 +1314,8 @@ class KTXBottle(bpy.types.Operator):
        v1=bm.verts.new((self.neck_diameter, 0.0, self.thread_height))
        v2=bm.verts.new((self.neck_diameter, 0.0, 0.0))
        bm.edges.new((v1,v2))
-       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
        if self.eoff_onoff and self.eoffset != 0.0:
@@ -1320,9 +1324,10 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
-       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
-       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
        verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
@@ -1344,15 +1349,21 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v5,v6))
        bm.edges.new((v6,v7))
        bm.edges.new((v7,v8))
-       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #----------Top
-       aa=((self.thread_steps/20)+1.0)*self.thread_height
-       bb=self.thread_steps%20
-       v1=bm.verts.new((self.neck_diameter, 0.0, aa)) #5.0
-       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
-       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+#       aa=((self.thread_steps/20)+1.0)*self.thread_height
+#       bb=self.thread_steps%20
+       aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
+       bb=self.thread_steps%self.v
+
+       v1=bm.verts.new((self.neck_diameter, 0.0, aa))
+#       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
+       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
+#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
-       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
        verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
@@ -1382,7 +1393,9 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
 
-       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
+
 #---------Generate Bottle
        
        if self.remdoub_onoff and self.doubles != 0.0:
@@ -1420,7 +1433,8 @@ class KTXBottle(bpy.types.Operator):
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, self.thread_height))
        v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
        bm.edges.new((v2,v1))
-       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=self.thread_steps * 0.1 * math.pi,steps=self.thread_steps,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
        if self.eoff_onoff and self.eoffset != 0.0:
@@ -1429,22 +1443,29 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
-       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
-       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
        verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
        bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,-0.5))
        bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
 #----------Top
-       aa=((self.thread_steps/20)+1.0)*self.thread_height
-       bb=self.thread_steps%20
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa)) #5.0
-       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
-       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+#       aa=((self.thread_steps/20)+1.0)*self.thread_height
+#       bb=self.thread_steps%20
+       aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
+       bb=self.thread_steps%self.v
+
+       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa))
+#       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(bb*0.1*math.pi,3,'Z'))
+#       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/20),angle=20.0 * 0.1 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
+       bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
+
        bm.edges.ensure_lookup_table()
-       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-20:])
+       ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
        verts_new=[ele for ele in geom_new if isinstance(ele, bmesh.types.BMVert)]
@@ -1458,7 +1479,8 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v4,v3))
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
-       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #---------CapBody
        v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
        v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, -self.nl))
@@ -1471,7 +1493,8 @@ class KTXBottle(bpy.types.Operator):
        bm.edges.new((v4,v3))
        bm.edges.new((v3,v2))
        bm.edges.new((v2,v1))
-       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+#       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=2 * math.pi,steps=20.0,use_duplicate=0)
+       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
 
 #---------Generate Cap
