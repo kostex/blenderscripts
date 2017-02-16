@@ -1334,7 +1334,6 @@ class KTXPanel( bpy.types.Panel ):
 
         new_col().column().operator("wm.ktx_objlib")
         new_col().column().operator("wm.ktx_tri_tangle")
-
         new_col().column().operator("wm.ktx_erase_all_materials")
         new_col().column().operator("wm.ktx_erase_unused_textures")
         new_col().column().operator("wm.ktx_erase_unused_palettes")
@@ -1352,8 +1351,6 @@ class KTXPanel( bpy.types.Panel ):
         new_col().column().operator("wm.ktx_polar_array")
         new_col().column().operator("wm.ktx_spiral_circles")
         new_col().column().operator("wm.ktx_spirograph_2")
-
-
         new_col().column().operator("wm.ktx_polish")
         new_col().column().operator("wm.ktx_bottle_1")
 
