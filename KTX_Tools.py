@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Tools",
     "author": "Roel Koster",
-    "version": (3, 0),
+    "version": (3, 2),
     "blender": (2, 7, 0),
     "location": "View3D > Tools",
     "category": "3D View"}
@@ -988,19 +988,25 @@ class KTXBottle(bpy.types.Operator):
     bl_label="KTX Create a Bottle and Cap"
     bl_options={'REGISTER','UNDO', 'PRESET'}
 
+    expert_mode = bpy.props.BoolProperty(name="Expert Mode",
+        description="Tweak bottle/cap shape On/Off",
+        default=False)
     hide_bottle = bpy.props.BoolProperty(name="Hide Bottle",
         description="Hide Bottle On/Off",
         default=False)
     hide_cap = bpy.props.BoolProperty(name="Hide Cap",
         description="Hide Cap On/Off",
         default=False)
+    comp_bot = bpy.props.BoolProperty(name="Generate Complete Bottle",
+        description="Generate Complete Bottle or only Threads",
+        default=True)
 
     overall_scale = bpy.props.FloatProperty(name="Overall Scale",
         description="Overall Scale",
         default=0.1)
     v = bpy.props.IntProperty(name="Vertices",
         description="Cylinder divided into this many Vertices",
-        default=12)
+        default=12,min=3,max=24)
     thread_height = bpy.props.FloatProperty(name="Thread Height",
         description="Thread Height",
         default=1.0)
@@ -1016,12 +1022,12 @@ class KTXBottle(bpy.types.Operator):
     depth = bpy.props.FloatProperty(name="Depth",
         description="Depth",
         default=0.44)
-    eoff_onoff = bpy.props.BoolProperty(name="Extra Offset",
-        description="Extra Offset On/Off",
+    eoff_onoff = bpy.props.BoolProperty(name="Enlarge Cap",
+        description="Enlarge Cap (to prevent intersection between threads",
         default=False)
-    eoffset = bpy.props.FloatProperty(name="Extra Offset Distance",
-        description="Extra Offset",
-        default=0.01)
+    eoffset = bpy.props.IntProperty(name="Enlarge Cap Percentage",
+        description="Percentage of Neck Diameter",
+        default=1)
     remdoub_onoff = bpy.props.BoolProperty(name="Remove Doubles",
         description="Remove Doubles On/Off",
         default=True)
@@ -1033,13 +1039,13 @@ class KTXBottle(bpy.types.Operator):
         default=False)
     subs_onoff = bpy.props.BoolProperty(name="SubSurf",
         description="SubSurf On/Off",
-        default=False)
+        default=True)
     nl = bpy.props.FloatProperty(name="Neck Length",
         description="Neck Length",
         default=0.1)
     x1 = bpy.props.FloatProperty(name="x1",
         description="x1",
-        default=4.0)
+        default=4.0,)
     z1 = bpy.props.FloatProperty(name="z1",
         description="z1",
         default=3.0)
@@ -1106,6 +1112,64 @@ class KTXBottle(bpy.types.Operator):
         description="z10",
         default=5.0)
 
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self, 'expert_mode')
+        col.prop(self, 'comp_bot')
+        col.separator()
+        col.prop(self, 'hide_bottle')
+        col.prop(self, 'hide_cap')
+        col.separator()
+        col.prop(self, 'overall_scale')
+        col.prop(self, 'v')
+        col.prop(self, 'thread_height')
+        col.prop(self, 'thread_steps')
+        col.prop(self, 'neck_diameter')
+        col.prop(self, 'trap')
+        col.prop(self, 'depth')
+        col.prop(self, 'nl')
+        col.prop(self, 'tl')
+        col.prop(self, 'tt')
+        col.separator()
+        col.prop(self, 'eoff_onoff')
+        if self.eoff_onoff:
+            col.prop(self, 'eoffset')
+        col.separator()
+        col.prop(self, 'remdoub_onoff')
+        if self.remdoub_onoff: 
+            col.prop(self, 'doubles')
+        col.separator()
+        col.prop(self, 'smooth_onoff')
+        col.prop(self, 'subs_onoff')
+        if self.expert_mode and self.comp_bot:
+            col.label(text='Bottle Outside Shape')
+            col.prop(self,'x1')
+            col.prop(self,'z1')
+            col.prop(self,'x2')
+            col.prop(self,'z2')
+            col.prop(self,'x3')
+            col.prop(self,'z3')
+            col.prop(self,'x4')
+            col.prop(self,'z4')
+            col.prop(self,'x5')
+            col.prop(self,'z5')
+            col.separator()
+            col.label(text='Bottle Inside Shape')
+            col.prop(self,'x6')
+            col.prop(self,'z6')
+            col.prop(self,'x7')
+            col.prop(self,'z7')
+            col.prop(self,'x8')
+            col.prop(self,'z8')
+            col.separator()
+            col.label(text='Cap Shape')
+            col.prop(self,'x9')
+            col.prop(self,'z9')
+            col.prop(self,'x10')
+            col.prop(self,'z10')
+
+
 
     def execute(self,context):
        import math, bmesh
@@ -1118,8 +1182,8 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
-       if self.eoff_onoff and self.eoffset != 0.0:
-           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+#       if self.eoff_onoff and self.eoffset != 0.0:
+#           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
@@ -1133,22 +1197,23 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,-0.5))
        bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
 #---------BottleBody
-       v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
-       v2=bm.verts.new((self.neck_diameter, 0.0, -self.nl))
-       v3=bm.verts.new((self.neck_diameter+self.x1, 0.0, -self.z1))
-       v4=bm.verts.new((self.neck_diameter+self.x2, 0.0, -self.z2))
-       v5=bm.verts.new((self.neck_diameter+self.x3, 0.0, -self.z3))
-       v6=bm.verts.new((self.neck_diameter+self.x4, 0.0, -self.z4))
-       v7=bm.verts.new((self.neck_diameter+self.x5, 0.0, -self.z5))
-       v8=bm.verts.new((0.0, 0.0, -self.z5))
-       bm.edges.new((v1,v2))
-       bm.edges.new((v2,v3))
-       bm.edges.new((v3,v4))
-       bm.edges.new((v4,v5))
-       bm.edges.new((v5,v6))
-       bm.edges.new((v6,v7))
-       bm.edges.new((v7,v8))
-       bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
+       if self.comp_bot:
+           v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
+           v2=bm.verts.new((self.neck_diameter, 0.0, -self.nl))
+           v3=bm.verts.new((self.neck_diameter+self.x1, 0.0, -self.z1))
+           v4=bm.verts.new((self.neck_diameter+self.x2, 0.0, -self.z2))
+           v5=bm.verts.new((self.neck_diameter+self.x3, 0.0, -self.z3))
+           v6=bm.verts.new((self.neck_diameter+self.x4, 0.0, -self.z4))
+           v7=bm.verts.new((self.neck_diameter+self.x5, 0.0, -self.z5))
+           v8=bm.verts.new((0.0, 0.0, -self.z5))
+           bm.edges.new((v1,v2))
+           bm.edges.new((v2,v3))
+           bm.edges.new((v3,v4))
+           bm.edges.new((v4,v5))
+           bm.edges.new((v5,v6))
+           bm.edges.new((v6,v7))
+           bm.edges.new((v7,v8))
+           bmesh.ops.spin(bm,geom=bm.verts[-8:]+bm.edges[-7:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #----------Top
        aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
        bb=self.thread_steps%self.v
@@ -1164,30 +1229,31 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
        ret_boven=bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,aa))
 #---------BottleInside
-       v1=bm.verts.new((self.neck_diameter, 0.0, aa))
-       v2=bm.verts.new((self.neck_diameter, 0.0, aa+self.tl))
+       if self.comp_bot:
+           v1=bm.verts.new((self.neck_diameter, 0.0, aa))
+           v2=bm.verts.new((self.neck_diameter, 0.0, aa+self.tl))
 
-       v3=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa+self.tl))
-       v3a=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa-self.tl))
+           v3=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa+self.tl))
+           v3a=bm.verts.new((self.neck_diameter-self.tt, 0.0, aa-self.tl))
 
-       v4=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.0))
-       v4a=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.2))
+           v4=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.0))
+           v4a=bm.verts.new((self.neck_diameter-self.tt, 0.0, -1.2))
 
-       v5=bm.verts.new((self.neck_diameter+self.x6, 0.0, -self.z6))
-       v6=bm.verts.new((self.neck_diameter+self.x7, 0.0, -self.z7))
-       v7=bm.verts.new((self.neck_diameter+self.x8, 0.0, -self.z8))
-       v8=bm.verts.new((0.0, 0.0, -self.z8))
-       bm.edges.new((v8,v7))
-       bm.edges.new((v7,v6))
-       bm.edges.new((v6,v5))
-       bm.edges.new((v5,v4a))
-       bm.edges.new((v4a,v4))
-       bm.edges.new((v4,v3a))
-       bm.edges.new((v3a,v3))
-       bm.edges.new((v3,v2))
-       bm.edges.new((v2,v1))
+           v5=bm.verts.new((self.neck_diameter+self.x6, 0.0, -self.z6))
+           v6=bm.verts.new((self.neck_diameter+self.x7, 0.0, -self.z7))
+           v7=bm.verts.new((self.neck_diameter+self.x8, 0.0, -self.z8))
+           v8=bm.verts.new((0.0, 0.0, -self.z8))
+           bm.edges.new((v8,v7))
+           bm.edges.new((v7,v6))
+           bm.edges.new((v6,v5))
+           bm.edges.new((v5,v4a))
+           bm.edges.new((v4a,v4))
+           bm.edges.new((v4,v3a))
+           bm.edges.new((v3a,v3))
+           bm.edges.new((v3,v2))
+           bm.edges.new((v2,v1))
 
-       bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
+           bmesh.ops.spin(bm,geom=bm.verts[-10:]+bm.edges[-9:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
 
 #---------Generate Bottle
        
@@ -1222,19 +1288,25 @@ class KTXBottle(bpy.types.Operator):
 
 #------Dop/Cap
 #------Draad/Thread
+
+       if self.eoff_onoff:
+           ca=(self.neck_diameter/100.0)*self.eoffset
+       else:
+           ca=0.0
+
        bm=bmesh.new()
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, self.thread_height))
-       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
+       v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, self.thread_height))
+       v2=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, 0.0))
        bm.edges.new((v2,v1))
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        gg=bm.faces[:]
-       if self.eoff_onoff and self.eoffset != 0.0:
-           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+#       if self.eoff_onoff and self.eoffset != 0.0:
+#           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
+       v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, 0.0))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
        bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
@@ -1247,7 +1319,7 @@ class KTXBottle(bpy.types.Operator):
        aa=((self.thread_height/self.v)*self.thread_steps)+self.thread_height
        bb=self.thread_steps%self.v
 
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa))
+       v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, aa))
        bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
@@ -1259,27 +1331,28 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.scale(bm,verts=verts_new,vec=(1.0,1.0,0.0))
        ret_boven=bmesh.ops.translate(bm,verts=verts_new,vec=(0.0,0.0,aa))
 #---------Cap Inside
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa))
-       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, aa+self.tl))
-       v3=bm.verts.new((self.neck_diameter+self.depth-self.tt, 0.0, aa+self.tl))
-       v4=bm.verts.new((0.0, 0.0, aa+self.tl))
-       bm.edges.new((v4,v3))
-       bm.edges.new((v3,v2))
-       bm.edges.new((v2,v1))
-       bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
+       if self.comp_bot:
+           v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, aa))
+           v2=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, aa+self.tl))
+           v3=bm.verts.new((self.neck_diameter+self.depth-self.tt+ca, 0.0, aa+self.tl))
+           v4=bm.verts.new((0.0, 0.0, aa+self.tl))
+           bm.edges.new((v4,v3))
+           bm.edges.new((v3,v2))
+           bm.edges.new((v2,v1))
+           bmesh.ops.spin(bm,geom=bm.verts[-4:]+bm.edges[-3:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 #---------CapBody
-       v1=bm.verts.new((self.neck_diameter+self.depth, 0.0, 0.0))
-       v2=bm.verts.new((self.neck_diameter+self.depth, 0.0, -self.nl))
-       v3=bm.verts.new((self.neck_diameter+self.depth+self.tt, 0.0, self.nl))
-       v4=bm.verts.new((self.neck_diameter+self.depth+self.x9, 0.0, self.z9))
-       v5=bm.verts.new((self.neck_diameter+self.depth+self.x10, 0.0, self.z10))
-       v6=bm.verts.new((0.0, 0.0, self.z10))
-       bm.edges.new((v6,v5))
-       bm.edges.new((v5,v4))
-       bm.edges.new((v4,v3))
-       bm.edges.new((v3,v2))
-       bm.edges.new((v2,v1))
-       bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
+           v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, 0.0))
+           v2=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, -self.nl))
+           v3=bm.verts.new((self.neck_diameter+self.depth+self.tt+ca, 0.0, self.nl))
+           v4=bm.verts.new((self.neck_diameter+self.depth+self.x9+ca, 0.0, self.z9))
+           v5=bm.verts.new((self.neck_diameter+self.depth+self.x10+ca, 0.0, self.z10))
+           v6=bm.verts.new((0.0, 0.0, self.z10))
+           bm.edges.new((v6,v5))
+           bm.edges.new((v5,v4))
+           bm.edges.new((v4,v3))
+           bm.edges.new((v3,v2))
+           bm.edges.new((v2,v1))
+           bmesh.ops.spin(bm,geom=bm.verts[-6:]+bm.edges[-5:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,0.0),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
 
 #---------Generate Cap
