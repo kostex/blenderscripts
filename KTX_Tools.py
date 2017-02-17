@@ -1130,8 +1130,9 @@ class KTXBottle(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col.prop(self, 'expert_mode')
         col.prop(self, 'comp_bot')
+        if self.comp_bot:
+            col.prop(self, 'expert_mode')
         col.separator()
         col.prop(self, 'hide_bottle')
         col.prop(self, 'hide_cap')
