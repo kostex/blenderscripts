@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Tools",
     "author": "Roel Koster",
-    "version": (3, 2),
+    "version": (3, 3),
     "blender": (2, 7, 0),
     "location": "View3D > Tools",
     "category": "3D View"}
@@ -1028,6 +1028,14 @@ class KTXBottle(bpy.types.Operator):
     eoffset = bpy.props.IntProperty(name="Enlarge Cap Percentage",
         description="Percentage of Neck Diameter",
         default=1)
+
+    skip_onoff = bpy.props.BoolProperty(name="Skip Thread",
+        description="Skip Thread",
+        default=False)
+    soffset = bpy.props.IntProperty(name="Skip Offset",
+        description="Skip Offset",
+        default=4)
+
     remdoub_onoff = bpy.props.BoolProperty(name="Remove Doubles",
         description="Remove Doubles On/Off",
         default=True)
@@ -1136,6 +1144,10 @@ class KTXBottle(bpy.types.Operator):
         if self.eoff_onoff:
             col.prop(self, 'eoffset')
         col.separator()
+        col.prop(self, 'skip_onoff')
+        if self.skip_onoff:
+            col.prop(self, 'soffset')
+        col.separator()
         col.prop(self, 'remdoub_onoff')
         if self.remdoub_onoff: 
             col.prop(self, 'doubles')
@@ -1180,16 +1192,18 @@ class KTXBottle(bpy.types.Operator):
        v2=bm.verts.new((self.neck_diameter, 0.0, 0.0))
        bm.edges.new((v1,v2))
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
-       bm.edges.ensure_lookup_table()
+       bm.faces.ensure_lookup_table()
        gg=bm.faces[:]
-#       if self.eoff_onoff and self.eoffset != 0.0:
-#           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       if self.skip_onoff:
+           for i in range(0,self.thread_steps,self.soffset):
+               gg.remove(bm.faces[i])
+
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter, 0.0, 0.0))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
-       bm.edges.ensure_lookup_table()
+#       bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
@@ -1221,7 +1235,7 @@ class KTXBottle(bpy.types.Operator):
        v1=bm.verts.new((self.neck_diameter, 0.0, aa))
        bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
-       bm.edges.ensure_lookup_table()
+#       bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
@@ -1299,16 +1313,17 @@ class KTXBottle(bpy.types.Operator):
        v2=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, 0.0))
        bm.edges.new((v2,v1))
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
-       bm.edges.ensure_lookup_table()
+       bm.faces.ensure_lookup_table()
        gg=bm.faces[:]
-#       if self.eoff_onoff and self.eoffset != 0.0:
-#           bmesh.ops.inset_region(bm,faces=gg,thickness=self.eoffset,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
+       if self.skip_onoff:
+           for i in range(0,self.thread_steps,self.soffset):
+               gg.remove(bm.faces[i])
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
 #----------Bottom
        v1=bm.verts.new((self.neck_diameter+self.depth+ca, 0.0, 0.0))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=(2.0*math.pi),steps=self.v,use_duplicate=0)
-       bm.edges.ensure_lookup_table()
+#       bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
@@ -1323,7 +1338,7 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.rotate(bm,verts=[v1],cent=(0.0,0.0,0.0),matrix=mathutils.Matrix.Rotation(((2*math.pi)/self.v)*bb,3,'Z'))
        bmesh.ops.spin(bm,geom=[v1],axis=(0.0,0.0,-1.0),cent=(0,0,0),dvec=(0,0,-self.thread_height/self.v),angle=(2.0 * math.pi),steps=self.v,use_duplicate=0)
 
-       bm.edges.ensure_lookup_table()
+#       bm.edges.ensure_lookup_table()
        ret=bmesh.ops.extrude_edge_only(bm,edges=bm.edges[-self.v:])
        geom_new = ret["geom"]
        del ret
