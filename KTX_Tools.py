@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Tools",
     "author": "Roel Koster",
-    "version": (3, 3),
+    "version": (3, 4),
     "blender": (2, 7, 0),
     "location": "View3D > Tools",
     "category": "3D View"}
@@ -1012,7 +1012,7 @@ class KTXBottle(bpy.types.Operator):
         default=1.0)
     thread_steps = bpy.props.IntProperty(name="Thread Steps",
         description="Thread Steps",
-        default=12)
+        default=28)
     neck_diameter = bpy.props.FloatProperty(name="Neck Diameter",
         description="Neck Diameter",
         default=2.0)
@@ -1029,12 +1029,19 @@ class KTXBottle(bpy.types.Operator):
         description="Percentage of Neck Diameter",
         default=1)
 
-    skip_onoff = bpy.props.BoolProperty(name="Skip Thread",
-        description="Skip Thread",
+    skip_onoff = bpy.props.BoolProperty(name="Step Thread Bottle",
+        description="Step Thread Bottle",
         default=False)
-    soffset = bpy.props.IntProperty(name="Skip Offset",
-        description="Skip Offset",
+    soffset = bpy.props.IntProperty(name="Skip Offset Bottle",
+        description="Skip Offset Bottle",
         default=4)
+    sckip_onoff = bpy.props.BoolProperty(name="Step Thread Cap",
+        description="Step Thread Cap",
+        default=False)
+    scoffset = bpy.props.IntProperty(name="Skip Offset Cap",
+        description="Skip Offset Cap",
+        default=4)
+
 
     remdoub_onoff = bpy.props.BoolProperty(name="Remove Doubles",
         description="Remove Doubles On/Off",
@@ -1147,7 +1154,11 @@ class KTXBottle(bpy.types.Operator):
         col.prop(self, 'skip_onoff')
         if self.skip_onoff:
             col.prop(self, 'soffset')
+        col.prop(self, 'sckip_onoff')
+        if self.sckip_onoff:
+            col.prop(self, 'scoffset')
         col.separator()
+
         col.prop(self, 'remdoub_onoff')
         if self.remdoub_onoff: 
             col.prop(self, 'doubles')
@@ -1315,8 +1326,8 @@ class KTXBottle(bpy.types.Operator):
        bmesh.ops.spin(bm,geom=bm.verts[:]+bm.edges[:],axis=(0.0,0.0,1.0),cent=(0,0,0),dvec=(0,0,self.thread_height/self.v),angle=self.thread_steps * ((2.0 * math.pi)/self.v),steps=self.thread_steps,use_duplicate=0)
        bm.faces.ensure_lookup_table()
        gg=bm.faces[:]
-       if self.skip_onoff:
-           for i in range(0,self.thread_steps,self.soffset):
+       if self.sckip_onoff:
+           for i in range(0,self.thread_steps,self.scoffset):
                gg.remove(bm.faces[i])
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.thread_height/5.0,depth=0.0,use_boundary=1,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
        bmesh.ops.inset_region(bm,faces=gg,thickness=self.trap,depth=self.depth,use_boundary=0,use_even_offset=1,use_relative_offset=0,use_interpolate=0)
