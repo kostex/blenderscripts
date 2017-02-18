@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Tools",
     "author": "Roel Koster",
-    "version": (3, 4),
+    "version": (3, 5),
     "blender": (2, 7, 0),
     "location": "View3D > Tools",
     "category": "3D View"}
@@ -1063,7 +1063,7 @@ class KTXBottle(bpy.types.Operator):
         default=4.0,)
     z1 = bpy.props.FloatProperty(name="z1",
         description="z1",
-        default=3.0)
+        default=2.09)
     x2 = bpy.props.FloatProperty(name="x2",
         description="x2",
         default=4.0)
@@ -1097,7 +1097,7 @@ class KTXBottle(bpy.types.Operator):
 
     x6 = bpy.props.FloatProperty(name="x6",
         description="x6",
-        default=1.25)
+        default=3.14)
     z6 = bpy.props.FloatProperty(name="z6",
         description="z6",
         default=2.0)
@@ -1122,7 +1122,7 @@ class KTXBottle(bpy.types.Operator):
         default=4.5)
     x10 = bpy.props.FloatProperty(name="x10",
         description="x10",
-        default=1.9)
+        default=0.1)
     z10 = bpy.props.FloatProperty(name="z10",
         description="z10",
         default=5.0)
@@ -1144,9 +1144,10 @@ class KTXBottle(bpy.types.Operator):
         col.prop(self, 'neck_diameter')
         col.prop(self, 'trap')
         col.prop(self, 'depth')
-        col.prop(self, 'nl')
-        col.prop(self, 'tl')
-        col.prop(self, 'tt')
+        if self.comp_bot:
+            col.prop(self, 'nl')
+            col.prop(self, 'tl')
+            col.prop(self, 'tt')
         col.separator()
         col.prop(self, 'eoff_onoff')
         if self.eoff_onoff:
@@ -1431,19 +1432,8 @@ class KTXPanel( bpy.types.Panel ):
         scn = context.scene
         layout = self.layout
         new_col = self.layout.column
-
-        new_col().column().operator("wm.ktx_objlib")
+        new_col().column().operator("wm.ktx_bottle_1")
         new_col().column().operator("wm.ktx_tri_tangle")
-        new_col().column().operator("wm.ktx_erase_all_materials")
-        new_col().column().operator("wm.ktx_erase_unused_textures")
-        new_col().column().operator("wm.ktx_erase_unused_palettes")
-        new_col().column().operator("wm.ktx_set_viewport_color")
-        new_col().column().operator("wm.ktx_assign_random_diffuse_colors")
-        new_col().column().operator("wm.ktx_add_random_cubes")
-        new_col().column().operator("wm.ktx_add_random_copies")
-        new_col().column().operator("wm.ktx_assign_materials")
-        new_col().column().operator("wm.ktx_add_glossy_mix_shaders")
-        new_col().column().operator("wm.ktx_add_subsurf_creases")
         new_col().column().operator("wm.ktx_function")
         new_col().column().operator("wm.ktx_cylinders")
         new_col().column().operator("wm.ktx_cylinder_grid")
@@ -1451,8 +1441,23 @@ class KTXPanel( bpy.types.Panel ):
         new_col().column().operator("wm.ktx_polar_array")
         new_col().column().operator("wm.ktx_spiral_circles")
         new_col().column().operator("wm.ktx_spirograph_2")
+        new_col().column().operator("wm.ktx_add_random_cubes")
+        new_col().column().operator("wm.ktx_add_random_copies")
+        new_col().column().separator()
+        new_col().column().operator("wm.ktx_objlib")
+        new_col().column().separator()
+        new_col().column().operator("wm.ktx_erase_all_materials")
+        new_col().column().operator("wm.ktx_erase_unused_textures")
+        new_col().column().operator("wm.ktx_erase_unused_palettes")
+        new_col().column().separator()
+        new_col().column().operator("wm.ktx_add_subsurf_creases")
         new_col().column().operator("wm.ktx_polish")
-        new_col().column().operator("wm.ktx_bottle_1")
+        new_col().column().separator()
+        new_col().column().operator("wm.ktx_assign_materials")
+        new_col().column().operator("wm.ktx_assign_random_diffuse_colors")
+        new_col().column().operator("wm.ktx_add_glossy_mix_shaders")
+        new_col().column().operator("wm.ktx_set_viewport_color")
+
 
 
 def register():
