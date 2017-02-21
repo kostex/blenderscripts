@@ -57,8 +57,8 @@ class KTX_MeshCreate(bpy.types.Operator):
             if c_mode != 'OBJECT':
                 bpy.ops.object.mode_set(mode='OBJECT')
             new_mesh=me.copy()
-            (dt, micro) = datetime.now().strftime('_%Y-%m-%d:%H:%M:%S.%f').split('.')
-            dt = "%s.%03d" % (dt, int(micro) / 1000)
+            (dt, micro) = datetime.now().strftime('_%Y-%m-%d:%H:%M:%S#%f').split('#')
+            dt = "%s#%04d" % (dt, int(micro) / 1000)
             new_mesh.name=obj_name+dt
             obj.data=new_mesh
             obj.data.use_fake_user=defpin
@@ -90,7 +90,7 @@ class KTX_Mesh_Versions(bpy.types.Panel):
             len_obj=len(obj.name)
             for m in bpy.data.meshes:
                 len_m=len(m.name)
-                if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+24 or len(m.name) == len_obj):
+                if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+25 or len(m.name) == len_obj):
                     row = box.row()
                     row.operator("ktx.meshversions_select",text=m.name).m_index = m.name
                     if bpy.data.meshes[m.name].use_fake_user:
