@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Selectbuffer",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -68,7 +68,7 @@ class KTX_Selectbuffer(bpy.types.Panel):
     def draw(self, context):
         scene = context.scene
         obj = context.object
-
+        c_mode=obj.mode
         layout = self.layout
         row = layout.row()
         col = row.column()
@@ -76,11 +76,14 @@ class KTX_Selectbuffer(bpy.types.Panel):
             col.label(text='Select/Create something first')
         else:
             if obj.type == 'MESH':
-                col.operator("ktx.selectbuffer_mutate", text="Set").operation = 'set'
-                col.operator("ktx.selectbuffer_mutate", text="Clear").operation = 'clear'
-                col.operator("ktx.selectbuffer_mutate", text="Union").operation = 'union'
-                col.operator("ktx.selectbuffer_mutate", text="Difference").operation = 'difference'
-                col.operator("ktx.selectbuffer_mutate", text="Intersection").operation = 'intersection'
+                if c_mode == 'EDIT':
+                    col.operator("ktx.selectbuffer_mutate", text="Set").operation = 'set'
+                    col.operator("ktx.selectbuffer_mutate", text="Clear").operation = 'clear'
+                    col.operator("ktx.selectbuffer_mutate", text="Add/Union").operation = 'union'
+                    col.operator("ktx.selectbuffer_mutate", text="Subtract/Difference").operation = 'difference'
+                    col.operator("ktx.selectbuffer_mutate", text="Intersection").operation = 'intersection'
+                else:
+                    col.label(text='Enter EDIT Mode to use')
             else:
                 col.label(text='Select a Mesh Object')
 
