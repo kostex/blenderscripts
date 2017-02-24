@@ -24,15 +24,15 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
         old_buffer=bpy.context.scene.ktx_selectbuffer
         emode = bpy.context.tool_settings.mesh_select_mode
 
-        c_mode=bpy.context.active_object.mode
+        c_mode=bpy.context.object.mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
         if emode[0]==True:
-            all_vefs = bpy.context.active_object.data.vertices
+            all_vefs = bpy.context.object.data.vertices
         elif emode[1]==True:
-            all_vefs = bpy.context.active_object.data.edges
+            all_vefs = bpy.context.object.data.edges
         elif emode[2]==True:
-            all_vefs = bpy.context.active_object.data.polygons
+            all_vefs = bpy.context.object.data.polygons
 
         selected_vefs = [vef for vef in all_vefs if vef.select]
         selected_vefs_buffer=[]
@@ -69,7 +69,7 @@ class KTX_Selectbuffer(bpy.types.Panel):
     bl_region_type = 'UI'
 
     def draw(self, context):
-        obj = bpy.context.active_object
+        obj = bpy.context.object
         layout = self.layout
         row = layout.row()
         col = row.column()
