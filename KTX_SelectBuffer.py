@@ -51,8 +51,9 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
         elif self.operation == 'clear':
             resulting_vefs = []
         old_buffer.data=resulting_vefs
-        for vef in all_vefs:
-             vef.select=False
+        bpy.ops.object.mode_set(mode = 'EDIT') 
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')         
         for vef in resulting_vefs:
              all_vefs[vef].select=True
         bpy.ops.object.mode_set(mode=c_mode)
