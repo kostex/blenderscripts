@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Selectbuffer",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 2),
+    "version": (1, 3),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -24,15 +24,15 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
         old_buffer=bpy.context.scene.ktx_selectbuffer
         emode = bpy.context.tool_settings.mesh_select_mode
 
-        c_mode=bpy.context.object.mode
+        c_mode=bpy.context.active_object.mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
         if emode[0]==True:
-            all_vefs = bpy.context.object.data.vertices
+            all_vefs = bpy.context.active_object.data.vertices
         elif emode[1]==True:
-            all_vefs = bpy.context.object.data.edges
+            all_vefs = bpy.context.active_object.data.edges
         elif emode[2]==True:
-            all_vefs = bpy.context.object.data.polygons
+            all_vefs = bpy.context.active_object.data.polygons
 
         selected_vefs = [vef for vef in all_vefs if vef.select]
         selected_vefs_buffer=[]
@@ -51,13 +51,14 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
         elif self.operation == 'clear':
             resulting_vefs = []
         old_buffer.data=resulting_vefs
-        bpy.ops.object.mode_set(mode = 'EDIT') 
-        bpy.ops.mesh.select_all(action = 'DESELECT')
-        bpy.ops.object.mode_set(mode = 'OBJECT') 
+        for vef in all_vefs:
+             vef.select=False
         for vef in resulting_vefs:
              all_vefs[vef].select=True
-
         bpy.ops.object.mode_set(mode=c_mode)
+
+        bpy.ops.ed.undo_push()
+
         return {'FINISHED'}
 
 
@@ -68,7 +69,7 @@ class KTX_Selectbuffer(bpy.types.Panel):
     bl_region_type = 'UI'
 
     def draw(self, context):
-        obj = bpy.context.object
+        obj = bpy.context.active_object
         layout = self.layout
         row = layout.row()
         col = row.column()
