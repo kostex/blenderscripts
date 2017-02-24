@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Selectbuffer",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 1),
+    "version": (1, 2),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -16,7 +16,8 @@ class Oldbuffer():
 class KTX_Selectbuffer_Mutate(bpy.types.Operator):
     bl_label = "select buffer mutate"
     bl_idname = "ktx.selectbuffer_mutate"
-    
+    bl_description = "A.union(B) elements from both A and B" + "\n" + "A.difference(B) elements in A but not in B" + "\n" + "A.symmetric_difference(B) elements in either A or B but not both" + "\n" + "A.intersection(B) elements common to A and B"
+
     operation = StringProperty()
     
     def execute(self, context):
@@ -24,8 +25,7 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
         emode = bpy.context.tool_settings.mesh_select_mode
 
         c_mode=bpy.context.object.mode
-        if c_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         if emode[0]==True:
             all_vefs = bpy.context.object.data.vertices
@@ -42,6 +42,8 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
             resulting_vefs = set(old_buffer.data).union(selected_vefs_buffer)
         elif self.operation == 'difference':
             resulting_vefs = set(old_buffer.data).difference(selected_vefs_buffer)
+        elif self.operation == 'sym_difference':
+            resulting_vefs = set(old_buffer.data).symmetric_difference(selected_vefs_buffer)
         elif self.operation == 'intersection':
             resulting_vefs = set(old_buffer.data).intersection(selected_vefs_buffer)
         elif self.operation == 'set':
@@ -66,9 +68,7 @@ class KTX_Selectbuffer(bpy.types.Panel):
     bl_region_type = 'UI'
 
     def draw(self, context):
-        scene = context.scene
-        obj = context.object
-        c_mode=obj.mode
+        obj = bpy.context.object
         layout = self.layout
         row = layout.row()
         col = row.column()
@@ -76,11 +76,13 @@ class KTX_Selectbuffer(bpy.types.Panel):
             col.label(text='Select/Create something first')
         else:
             if obj.type == 'MESH':
+                c_mode = bpy.context.object.mode
                 if c_mode == 'EDIT':
                     col.operator("ktx.selectbuffer_mutate", text="Set").operation = 'set'
                     col.operator("ktx.selectbuffer_mutate", text="Clear").operation = 'clear'
-                    col.operator("ktx.selectbuffer_mutate", text="Add/Union").operation = 'union'
-                    col.operator("ktx.selectbuffer_mutate", text="Subtract/Difference").operation = 'difference'
+                    col.operator("ktx.selectbuffer_mutate", text="Union").operation = 'union'
+                    col.operator("ktx.selectbuffer_mutate", text="Difference").operation = 'difference'
+                    col.operator("ktx.selectbuffer_mutate", text="Symmetric Difference").operation = 'sym_difference'
                     col.operator("ktx.selectbuffer_mutate", text="Intersection").operation = 'intersection'
                 else:
                     col.label(text='Enter EDIT Mode to use')
