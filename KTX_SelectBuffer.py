@@ -16,7 +16,10 @@ class Oldbuffer():
 class KTX_Selectbuffer_Mutate(bpy.types.Operator):
     bl_label = "select buffer mutate"
     bl_idname = "ktx.selectbuffer_mutate"
-    bl_description = "A.union(B) elements from both A and B" + "\n" + "A.difference(B) elements in A but not in B" + "\n" + "A.symmetric_difference(B) elements in either A or B but not both" + "\n" + "A.intersection(B) elements common to A and B"
+    bl_description = ("A.union(B) elements from both A and B\n"
+                      "A.difference(B) elements in A but not in B\n"
+                      "A.symmetric_difference(B) elements in either A or B but not both\n"
+                      "A.intersection(B) elements common to A and B")
 
     operation = StringProperty()
     
