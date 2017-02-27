@@ -10,6 +10,8 @@ bl_info = {
 import bpy, mathutils, math, random, colorsys, bmesh, operator
 from mathutils import Vector
 
+EDIT_MODES = {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_METABALL', 'EDIT_TEXT', 'EDIT_ARMATURE'}
+
 
 class KTXAssignRandomDiffuseColors(bpy.types.Operator):
     
@@ -1311,7 +1313,8 @@ class KTXBottle(bpy.types.Operator):
        scene.objects.link(obj)
        if self.subs_onoff:
            obj.modifiers.new("subd", type='SUBSURF')
-           obj.modifiers['subd'].levels = 3
+           obj.modifiers["subd"].levels = 2
+           obj.modifiers["subd"].render_levels = 3
 
        bpy.context.scene.objects.active = obj
        if self.hide_bottle:
@@ -1412,7 +1415,8 @@ class KTXBottle(bpy.types.Operator):
        scene.objects.link(obj)
        if self.subs_onoff:
            obj.modifiers.new("subd", type='SUBSURF')
-           obj.modifiers['subd'].levels = 3
+           obj.modifiers["subd"].levels = 2
+           obj.modifiers["subd"].render_levels = 3
        
        bpy.context.scene.objects.active = obj
        bpy.ops.object.mode_set(mode='EDIT')
@@ -1695,7 +1699,8 @@ class KTXBottle2(bpy.types.Operator):
        scene.objects.link(obj)
        if self.subs_onoff:
            obj.modifiers.new("subd", type='SUBSURF')
-           obj.modifiers['subd'].levels = 3
+           obj.modifiers["subd"].levels = 2
+           obj.modifiers["subd"].render_levels = 3
 
        bpy.context.scene.objects.active = obj
        if self.hide_bottle:
@@ -1794,7 +1799,8 @@ class KTXBottle2(bpy.types.Operator):
        scene.objects.link(obj)
        if self.subs_onoff:
            obj.modifiers.new("subd", type='SUBSURF')
-           obj.modifiers['subd'].levels = 3
+           obj.modifiers["subd"].levels = 2
+           obj.modifiers["subd"].render_levels = 3
    
        bpy.context.scene.objects.active = obj
        bpy.ops.object.mode_set(mode='EDIT')
@@ -1859,7 +1865,8 @@ class KTXBottle2(bpy.types.Operator):
 
            if self.subs_onoff:
                obj.modifiers.new("subd", type="SUBSURF")
-               obj.modifiers["subd"].levels = 3
+               obj.modifiers["subd"].levels = 2
+               obj.modifiers["subd"].render_levels = 3
 
 
            bpy.context.scene.objects.active = obj
