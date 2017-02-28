@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Node Tools",
 	"author": "Roel Koster, kostex (irc), koelooptiemanna",
-	"version": (1 ,2),
+	"version": (1 ,3),
 	"blender": (2, 75, 0),
 	"location": "Node Editor Toolbar Texture Tab and Add Menu (Shift A)",
 	"description": "Quick Tools from the Node Editor",
@@ -159,6 +159,8 @@ class KTXAddMixGlossyFresnel(bpy.types.Operator):
     bl_label = "Add Mix and Glossy Nodes with Fresnel Control"
     bl_options = {'REGISTER', 'UNDO'}
 
+    n_type = StringProperty()
+
     def execute(self, context):
      mat=bpy.context.active_object.active_material
      tree=mat.node_tree
@@ -180,7 +182,7 @@ class KTXAddMixGlossyFresnel(bpy.types.Operator):
        node_glossy.location.y = node.location.y - 150
        node_glossy.select=False
 
-       node_fresnel=nodes.new('ShaderNodeFresnel')
+       node_fresnel=nodes.new(self.n_type)
        node_fresnel.location.x = node.location.x
        node_fresnel.location.y = node.location.y + 150
        node_fresnel.select=False
@@ -191,6 +193,49 @@ class KTXAddMixGlossyFresnel(bpy.types.Operator):
        links.new(node_glossy.outputs[0],node_mix.inputs[2])
        links.new(node_mix.outputs[0],link_to)
      return {'FINISHED'}
+
+class KTXAddNormalTexture(bpy.types.Operator):
+    bl_idname = "wm.ktx_add_normal_texture"
+    bl_label = "Add Normal Texture"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        mat=bpy.context.active_object.active_material
+        tree=mat.node_tree
+        nodes=tree.nodes
+        links=tree.links
+        xloc=0
+        yloc=0
+        for node in nodes:
+            if node.select:
+              xloc=node.location.x-200
+              yloc=node.location.y
+
+        node_normal=nodes.new("ShaderNodeNormalMap")
+        node_normal.location.x=xloc
+        node_normal.location.y=yloc-200
+
+        node_image=nodes.new("ShaderNodeTexImage")
+        node_image.width=300
+        node_image.location.x=xloc-400
+        node_image.location.y=yloc-200
+        node_image.color_space='NONE'
+
+        node_mapping=nodes.new("ShaderNodeMapping")
+        node_mapping.location.x=xloc-800
+        node_mapping.location.y=yloc-200
+
+        node_coords=nodes.new("ShaderNodeTexCoord")
+        node_coords.location.x=xloc-1000
+        node_coords.location.y=yloc-200
+
+
+        links.new(node_mapping.outputs[0],node_image.inputs[0])
+        links.new(node_coords.outputs[2],node_mapping.inputs[0])
+        links.new(node_normal.outputs[0],node.inputs[2])
+        links.new(node_image.outputs[0],node_normal.inputs[1])
+
+        return {'FINISHED'}
 
 class KTXNodesPanel(bpy.types.Panel):
     bl_label = "KTX Image Node"
@@ -213,7 +258,10 @@ class KTXNodeMenu(bpy.types.Menu):
         layout = self.layout
         layout.operator("wm.ktx_node_imtexmenu")
         layout.operator("wm.ktx_add_mix_glossy")
-        layout.operator("wm.ktx_add_mix_glossy_fresnel")
+        layout.operator("wm.ktx_add_mix_glossy_fresnel",text="Add Mix and Glossy Nodes with Fresnel Control").n_type="ShaderNodeFresnel"
+        layout.operator("wm.ktx_add_mix_glossy_fresnel",text="Add Mix and Glossy Nodes with LayerWeight Control").n_type="ShaderNodeLayerWeight"
+        layout.operator("wm.ktx_add_normal_texture")
+
         layout.operator("wm.ktx_set_viewport_color_from_selected_node")
 
 def menu_func(self, context):
