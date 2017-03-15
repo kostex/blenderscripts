@@ -20,4 +20,5 @@ Remarks/Functionality:
 
 - KTX_Tools.py is a collection of unrelated tools I've created through the years.. mostly for testing/training purposes
 - KTX_Tools.py only needs KTX_Objects.blend if you want to use the simple version of KTX Object Library inside it.
+- KTX_RenderSlot.py very small tool to add a quick Render slot selection in the render panel.
 
