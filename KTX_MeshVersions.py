@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Mesh Versions",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 1),
+    "version": (1, 2),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -15,6 +15,7 @@ from bpy.props import StringProperty, BoolProperty, IntProperty
 class KTX_MeshSelect(bpy.types.Operator):
     bl_label = "select mesh"
     bl_idname = "ktx.meshversions_select"
+    bl_description = "Change the current mesh to this version"
     
     m_index = StringProperty()
     
@@ -30,6 +31,7 @@ class KTX_MeshSelect(bpy.types.Operator):
 class KTX_MeshFake(bpy.types.Operator):
     bl_label = "mesh fake user"
     bl_idname = "ktx.meshversions_fakeuser"
+    bl_description = "If pinned (FAKE_USER=TRUE) this mesh will be saved in the blend file\nIf unpinned (FAKE_USER=FALSE) this mesh will be discarded when saving the blend file"
     
     m_index = StringProperty()
     
@@ -46,7 +48,8 @@ class KTX_MeshFake(bpy.types.Operator):
 class KTX_MeshCreate(bpy.types.Operator):
     bl_label = "Create Mesh Version"
     bl_idname = "ktx.meshversions_create"
-    
+    bl_description=("Create a copy of the mesh data of the current object\n"
+                    "and set it as active")
     def execute(self, context):
         defpin = bpy.context.scene.ktx_defpin
         obj = context.object
@@ -81,10 +84,10 @@ class KTX_Mesh_Versions(bpy.types.Panel):
         row = layout.row()
         col = row.column()
         if obj == None:
-            col.label(text='Select/Create something first')
+            col.label(text='Select/Create something first!')
         else:
             if obj.type == 'MESH':
-                col.operator("ktx.meshversions_create", text="Create a Version of Current Object")
+                col.operator("ktx.meshversions_create")
                 col.prop(scene, "ktx_defpin")
                 box = layout.box()
                 box.label("Versions of Active Object: " + obj.name)
@@ -95,15 +98,15 @@ class KTX_Mesh_Versions(bpy.types.Panel):
                         row = box.row()
                         row.operator("ktx.meshversions_select",text=m.name).m_index = m.name
                         if bpy.data.meshes[m.name].use_fake_user:
-                            row.operator("ktx.meshversions_fakeuser",text="",icon="PINNED").m_index = m.name
+                            row.operator("ktx.meshversions_fakeuser", text="",icon="PINNED").m_index = m.name
                         else:
-                            row.operator("ktx.meshversions_fakeuser",text="",icon="UNPINNED").m_index = m.name
+                            row.operator("ktx.meshversions_fakeuser", text="",icon="UNPINNED").m_index = m.name
             else:
                 col.label(text='Select a Mesh Object')
 
 
 def register():
-    bpy.types.Scene.ktx_defpin = bpy.props.BoolProperty(name="Auto Pinning", description="When Adding Default Pin On/Off", default=False)
+    bpy.types.Scene.ktx_defpin = bpy.props.BoolProperty(name="Auto Pinning", description="When creating a copy set pinning to ON automatically (FAKE_USER=TRUE)", default=False)
     bpy.utils.register_module(__name__)
 
 
