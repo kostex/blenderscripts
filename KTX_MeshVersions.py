@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Mesh Versions",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 2),
+    "version": (1, 3),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -27,6 +27,18 @@ class KTX_MeshSelect(bpy.types.Operator):
         obj.data = bpy.data.meshes[self.m_index]
         bpy.ops.object.mode_set(mode=c_mode)
         return {'FINISHED'}
+
+class KTX_MeshRemove(bpy.types.Operator):
+    bl_label = "remove mesh"
+    bl_idname = "ktx.meshversions_remove"
+    bl_description = "Remove the current mesh"
+    
+    m_index = StringProperty()
+    
+    def execute(self, context):
+        bpy.data.meshes.remove(bpy.data.meshes[self.m_index])
+        return {'FINISHED'}
+
 
 class KTX_MeshFake(bpy.types.Operator):
     bl_label = "mesh fake user"
@@ -91,12 +103,23 @@ class KTX_Mesh_Versions(bpy.types.Panel):
                 col.prop(scene, "ktx_defpin")
                 box = layout.box()
                 box.label("Versions of Active Object: " + obj.name)
+
                 len_obj=len(obj.name)
+
+                mesh_count=0
+                for m in bpy.data.meshes:
+                    len_m=len(m.name)
+                    if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+25 or len(m.name) == len_obj):
+                        mesh_count+=1;
+
                 for m in bpy.data.meshes:
                     len_m=len(m.name)
                     if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+25 or len(m.name) == len_obj):
                         row = box.row()
                         row.operator("ktx.meshversions_select",text=m.name).m_index = m.name
+                        if mesh_count > 1:
+                            row.operator("ktx.meshversions_remove",text="",icon="X").m_index = m.name
+                            
                         if bpy.data.meshes[m.name].use_fake_user:
                             row.operator("ktx.meshversions_fakeuser", text="",icon="PINNED").m_index = m.name
                         else:
