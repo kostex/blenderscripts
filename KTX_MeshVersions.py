@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Mesh Versions",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 3),
+    "version": (1, 4),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -10,6 +10,22 @@ import bpy,time
 from datetime import datetime
 from bpy.types import Menu, Panel
 from bpy.props import StringProperty, BoolProperty, IntProperty
+
+class KTX_MeshInit(bpy.types.Operator):
+    bl_label = "Initialise Mesh Versioning"
+    bl_idname = "ktx.meshversions_init"
+    bl_description = "Initialise the current object to support versioning (Rename object/mesh to unique name)"
+        
+    def execute(self, context):
+        c_mode=bpy.context.object.mode
+        if c_mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+        obj = context.object
+        dt = datetime.now().strftime('_%y%m%d%H%M%S')
+        obj.name=obj.name+dt
+        obj.data.name=obj.name
+        bpy.ops.object.mode_set(mode=c_mode)
+        return {'FINISHED'}
 
 
 class KTX_MeshSelect(bpy.types.Operator):
@@ -66,15 +82,11 @@ class KTX_MeshCreate(bpy.types.Operator):
         defpin = bpy.context.scene.ktx_defpin
         obj = context.object
         if obj.type=='MESH':
-            obj_name=obj.name
             c_mode=bpy.context.object.mode
             me=obj.data
             if c_mode != 'OBJECT':
                 bpy.ops.object.mode_set(mode='OBJECT')
             new_mesh=me.copy()
-            (dt, micro) = datetime.now().strftime('_%Y-%m-%d:%H:%M:%S#%f').split('#')
-            dt = "%s#%04d" % (dt, int(micro) / 1000)
-            new_mesh.name=obj_name+dt
             obj.data=new_mesh
             obj.data.use_fake_user=defpin
             bpy.ops.object.mode_set(mode=c_mode)
@@ -93,39 +105,46 @@ class KTX_Mesh_Versions(bpy.types.Panel):
         obj = context.object
 
         layout = self.layout
-        row = layout.row()
-        col = row.column()
+        col = layout.column()
         if obj == None:
-            col.label(text='Select/Create something first!')
+            col.label('Select/Create something first!')
         else:
             if obj.type == 'MESH':
-                col.operator("ktx.meshversions_create")
-                col.prop(scene, "ktx_defpin")
-                box = layout.box()
-                box.label("Versions of Active Object: " + obj.name)
-
-                len_obj=len(obj.name)
-
-                mesh_count=0
-                for m in bpy.data.meshes:
-                    len_m=len(m.name)
-                    if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+25 or len(m.name) == len_obj):
-                        mesh_count+=1;
-
-                for m in bpy.data.meshes:
-                    len_m=len(m.name)
-                    if m.name[:len_obj] == obj.name and (len(m.name) == len_obj+25 or len(m.name) == len_obj):
-                        row = box.row()
-                        row.operator("ktx.meshversions_select",text=m.name).m_index = m.name
-                        if mesh_count > 1:
-                            row.operator("ktx.meshversions_remove",text="",icon="X").m_index = m.name
-                            
-                        if bpy.data.meshes[m.name].use_fake_user:
-                            row.operator("ktx.meshversions_fakeuser", text="",icon="PINNED").m_index = m.name
-                        else:
-                            row.operator("ktx.meshversions_fakeuser", text="",icon="UNPINNED").m_index = m.name
+                if len(obj.name) > 14:
+                    if obj.name[-13] == '_' and obj.name[-12:].isdigit():
+                        col.operator("ktx.meshversions_create")
+                        col.prop(scene, "ktx_defpin")
+                        box = layout.box()
+                        box.label("Versions of Active Object: " + obj.name)
+                        len_obj=len(obj.name)
+                        for m in bpy.data.meshes:
+                            len_m=len(m.name)
+                            if m.name[:len_obj] == obj.name:
+                                row = box.row()
+                                row.operator("ktx.meshversions_select",text=m.name).m_index = m.name
+                                if m.users == 0:
+                                    row.operator("ktx.meshversions_remove",text="",icon="X").m_index = m.name
+                        
+                                if bpy.data.meshes[m.name].use_fake_user:
+                                    row.operator("ktx.meshversions_fakeuser", text="",icon="PINNED").m_index = m.name
+                                else:
+                                    row.operator("ktx.meshversions_fakeuser", text="",icon="UNPINNED").m_index = m.name
+                else:
+                    col.operator("ktx.meshversions_init")
             else:
-                col.label(text='Select a Mesh Object')
+                col.label('Select a Mesh Object in the Scene!')
+                box = layout.box()
+                box.label('Or either remove unwanted or pin important meshes:')
+                for m in bpy.data.meshes:
+                    row = box.row()
+                    row.label(m.name)
+                    if m.users == 0:
+                        row.operator("ktx.meshversions_remove",text="",icon="X").m_index = m.name
+
+                    if bpy.data.meshes[m.name].use_fake_user:
+                        row.operator("ktx.meshversions_fakeuser", text="",icon="PINNED").m_index = m.name
+                    else:
+                        row.operator("ktx.meshversions_fakeuser", text="",icon="UNPINNED").m_index = m.name
 
 
 def register():
