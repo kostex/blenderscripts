@@ -1,3 +1,8 @@
+# NOW HEAR THIS #
+# This addon has been accepted in the blender addon contrib repositories #
+# So you don't have to download this.. it's already in blender! #
+
+
 bl_info = {
     "name": "KTX Mesh Versions",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",

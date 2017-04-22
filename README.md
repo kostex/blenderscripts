@@ -9,7 +9,7 @@ Just copy the files you want to your scripts folder.
 
 Remarks/Functionality:
 ## KTX_Tools.py is the only file needed when you want the Bottle/Cap script
-- KTX_MeshVersions.py is an Addon to save/restore versions of meshes during editing.
+## KTX_MeshVersions.py is an Addon to save/restore versions of meshes during editing (NOW IN BLENDER BY DEFAULT!)
 - KTX_Selectbuffer.py is an Addon to enable a select buffer.. Select something.. add it to a buffer, select others and do a boolean selection on the previous selection
 - KTX_Library_* will add themselves to your ADD MESH menu
 - KTX_Library_Materials.py needs KTX_Objects.blend (put your own materials in that blend file)
