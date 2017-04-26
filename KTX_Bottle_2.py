@@ -10,7 +10,6 @@ bl_info = {
 import bpy, mathutils, bmesh
 EDIT_MODES = {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_METABALL', 'EDIT_TEXT', 'EDIT_ARMATURE'}
 
-
 class KTXBottle2Sep(bpy.types.Operator):
     bl_idname="wm.ktx_bottle_2_sep"
     bl_label="KTX Create a Bottle and Cap"
