@@ -3,14 +3,16 @@ bl_info = {
     "author": "Roel Koster",
     "version": (1, 0),
     "blender": (2, 7, 0),
-    "location": "View3D > Tools",
+    "location": "View3D > Tools > Create",
     "category": "3D View"}
 
 
 import bpy, mathutils, bmesh
+EDIT_MODES = {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_METABALL', 'EDIT_TEXT', 'EDIT_ARMATURE'}
 
-class KTXBottle2(bpy.types.Operator):
-    bl_idname="wm.ktx_bottle_2"
+
+class KTXBottle2Sep(bpy.types.Operator):
+    bl_idname="wm.ktx_bottle_2_sep"
     bl_label="KTX Create a Bottle and Cap"
     bl_options={'REGISTER','UNDO', 'PRESET'}
 
@@ -32,7 +34,7 @@ class KTXBottle2(bpy.types.Operator):
 
     overall_scale = bpy.props.FloatProperty(name="Overall Scale",
         description="Overall Scale",
-        default=1.0)
+        default=0.1)
     v = bpy.props.IntProperty(name="Vertices",
         description="Cylinder divided into this many Vertices",
         default=12,min=3,max=24)
@@ -44,7 +46,7 @@ class KTXBottle2(bpy.types.Operator):
         default=28,min=1)
     neck_radius = bpy.props.FloatProperty(name="Neck Radius",
         description="Neck Radius",
-        default=1.0,min=0.1)
+        default=1.48,min=0.1)
     trap = bpy.props.FloatProperty(name="Trapezium Thread",
         description="Trapezium Thread",
         default=0.09,min=0.0)
@@ -98,16 +100,16 @@ class KTXBottle2(bpy.types.Operator):
     #     default=1.0,min=0.001)
     x1 = bpy.props.FloatProperty(name="X1",
         description="X1",
-        default=1.0)
+        default=2.11)
     z1 = bpy.props.FloatProperty(name="Z1",
         description="Z1",
         default=1.0)
     x2 = bpy.props.FloatProperty(name="X2",
         description="X2",
-        default=2.0)
+        default=1.58)
     z2 = bpy.props.FloatProperty(name="Z2",
         description="Z2",
-        default=2.0)
+        default=3.62)
     x3 = bpy.props.FloatProperty(name="X3",
         description="X3",
         default=1.0)
@@ -116,16 +118,16 @@ class KTXBottle2(bpy.types.Operator):
         default=4.0)
     x4 = bpy.props.FloatProperty(name="X4",
         description="X4",
-        default=1.0)
+        default=3.01)
     z4 = bpy.props.FloatProperty(name="Z4",
         description="Z4",
-        default=5.0)
+        default=8.75)
     x5 = bpy.props.FloatProperty(name="X5",
         description="X5",
         default=0.5)
     z5 = bpy.props.FloatProperty(name="Z5",
         description="Z5",
-        default=5.0)
+        default=8.69)
 
     @classmethod
     def poll(self, context):
@@ -457,7 +459,7 @@ class KTXBottle2(bpy.types.Operator):
        return {'FINISHED'}
 
 
-class KTXPanel( bpy.types.Panel ):
+class KTXPanel_2( bpy.types.Panel ):
     bl_label = "KosteX Bottle 2"
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
@@ -474,7 +476,7 @@ class KTXPanel( bpy.types.Panel ):
         scn = context.scene
         layout = self.layout
         new_col = self.layout.column
-        new_col().column().operator("wm.ktx_bottle_2")
+        new_col().column().operator("wm.ktx_bottle_2_sep")
 
 
 
