@@ -1,12 +1,7 @@
-# NOW HEAR THIS #
-# This addon has been accepted in the blender addon contrib repositories #
-# So you don't have to download this.. it's already in blender! #
-
-
 bl_info = {
-    "name": "KTX Mesh Versions",
+    "name": "KTX Mesh Versions UIList",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 4, 2),
+    "version": (1, 1, 0),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
@@ -14,17 +9,41 @@ bl_info = {
 import bpy,time
 from datetime import datetime
 from bpy.types import Menu, Panel
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty, IntProperty
+
+class KTX_MeshList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            obj=context.object
+            if obj == None:
+                self.filter_name=""
+            if obj.type == 'MESH':
+                self.filter_name=obj.name
+            else:
+                self.filter_name=""
+            layout.label(item.name, icon='MESH_DATA')
+            if item.users == 0:
+                layout.operator("ktx.meshversions_remove", text="", icon='X').m_index = item.name
+            icon='PINNED' if item.use_fake_user else 'UNPINNED'
+            layout.prop(item, "use_fake_user", text="", icon=icon)
+
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label("", icon = 'MESH_DATA')
+
+    def draw_filter(self, context, layout):
+         pass
 
 class KTX_MeshInit(bpy.types.Operator):
     bl_label = "Initialise Mesh Versioning"
     bl_idname = "ktx.meshversions_init"
     bl_description = "Initialise the current object to support versioning"
-
+        
     def execute(self, context):
         unique_id=str(time.time())
         context.object.data.ktx_mesh_id=context.object.ktx_object_id=unique_id
         return {'FINISHED'}
+
 
 class KTX_MeshSelect(bpy.types.Operator):
     bl_label = "Select Mesh"
@@ -71,7 +90,9 @@ class KTX_MeshCreate(bpy.types.Operator):
             obj.data=new_mesh
             obj.data.use_fake_user=defpin
             bpy.ops.object.mode_set(mode=c_mode)
+
         return {'FINISHED'}
+
 
 class KTX_Mesh_Versions(bpy.types.Panel):
     bl_label = "KTX Mesh Versions"
@@ -82,46 +103,11 @@ class KTX_Mesh_Versions(bpy.types.Panel):
     def draw(self, context):
         scene = context.scene
         obj = context.object
+
         layout = self.layout
-        if obj == None:
-            layout.label('No Object Selected')
-        else:
-            if obj.type == 'MESH':
-                if obj.ktx_object_id != '' and (obj.data.ktx_mesh_id == obj.ktx_object_id):
-                    icon='PINNED' if scene.ktx_defpin else 'UNPINNED'
-                    row=layout.row(align=True)
-                    row.prop(scene, "ktx_defpin",text="", icon=icon)
-                    row.operator("ktx.meshversions_create")
-                    box = layout.box()
-                    box.scale_y=0.65
-                    box.label("Currently active mesh: " + obj.data.name)
-                    for m in bpy.data.meshes:
-                        if m.ktx_mesh_id == obj.ktx_object_id:
-                            mesh_name=m.name
-                            row = box.row(align=True)
-                            row.operator("ktx.meshversions_select",text="",icon='RIGHTARROW').m_index = mesh_name
-                            row.prop(m,"name",text="",icon='MESH_DATA')
-                            if m.users == 0:
-                                row.operator("ktx.meshversions_remove",text="",icon="X").m_index = mesh_name
-                            icon='PINNED' if m.use_fake_user else 'UNPINNED'
-                            row.prop(m,"use_fake_user", text="", icon=icon)
-                    box.label()
-                else:
-                    layout.operator("ktx.meshversions_init")
-            else:
-                if bpy.data.meshes.items() != []:
-                    layout.label('All Meshes (Cleanup/Pin):')
-                    box = layout.box()
-                    box.scale_y=0.65
-                    for m in bpy.data.meshes:
-                        mesh_name=m.name
-                        row = box.row(align=True)
-                        row.prop(m,"name",text="",icon='MESH_DATA')
-                        if m.users == 0:
-                            row.operator("ktx.meshversions_remove",text="",icon="X").m_index = mesh_name
-                        icon='PINNED' if m.use_fake_user else 'UNPINNED'
-                        row.prop(m,"use_fake_user", text="", icon=icon)
-                    box.label()
+
+        layout.template_list("KTX_MeshList", "", bpy.data, "meshes", context.scene, "ktx_list_index")
+
 
 def register():
     bpy.types.Object.ktx_object_id = bpy.props.StringProperty(name="KTX Object ID", description="Unique ID to 'link' one object to multiple meshes")
