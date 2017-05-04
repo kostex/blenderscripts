@@ -51,12 +51,11 @@ class KTX_MeshList(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         helper = bpy.types.UI_UL_list
         collection = getattr(data, propname)
-        if context.object.type != None:
+        flt_flags = [self.bitflag_filter_item] * len(collection)
+        if context.object != None:
             if self.show_linked_only:
                 self.filter_name=context.object.ktx_object_id
                 flt_flags = helper.filter_items_by_name(self.filter_name, self.bitflag_filter_item, collection, "ktx_mesh_id", reverse=False)
-        else:
-            flt_flags = [self.bitflag_filter_item] * len(collection)
             
         flt_neworder=[]
 
@@ -130,6 +129,9 @@ class KTX_Mesh_Versions(bpy.types.Panel):
         scene = context.scene
         obj = context.object
         layout = self.layout
+        if obj != None:
+            if obj.type == 'MESH':
+                layout.label("Assigned mesh: " + obj.data.name)
         layout.template_list("KTX_MeshList", "", bpy.data, "meshes", context.scene, "ktx_list_index")
         
 
