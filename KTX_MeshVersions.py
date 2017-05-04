@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX Mesh Versions UIList",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 1, 1),
+    "version": (1, 1, 2),
     "blender": (2, 7, 0),
     "location": "View3D > Properties",
     "category": "3D View"}
