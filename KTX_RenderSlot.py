@@ -37,7 +37,9 @@ class SlotBuffer():
 class KTX_RenderSlot(bpy.types.Operator):
     bl_label = "Select Render Slot"
     bl_idname = "ktx.renderslot"
-    bl_description = "Select Render Slot ('>' denotes active slot)"
+    bl_description = ("Select Render Slot\n"
+                      "> denotes active slot\n"
+                      "* denotes occupied slot")
 
     number = IntProperty()
     
@@ -70,8 +72,8 @@ class KTX_CheckSlots(bpy.types.Operator):
 def ui(self, context):
         layout = self.layout
         row = layout.row(align=True)
-        row.alignment='LEFT'
         try:
+            row.alignment='LEFT'
             active=bpy.data.images['Render Result'].render_slots.active_index
             row = layout.row(align=True)
             row.alignment='EXPAND'
@@ -86,7 +88,7 @@ def ui(self, context):
                 else:
                     row.operator('ktx.renderslot', text=label).number=i
         except:
-            row.label('No Render Slots available yet')
+            layout.operator("render.render", text="No render slots available yet")
 
 @persistent
 def ktx_render_handler(scene):
