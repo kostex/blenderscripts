@@ -24,30 +24,35 @@ bl_info = {
     "location": "Properties Editor > Render > Render",
     "category": "Render"}
 
-import bpy,os
+import bpy
+from bpy.types import Operator
 from bpy.props import IntProperty
 from sys import platform
 from bpy.app.handlers import persistent
 
 nullpath = '/nul' if platform == 'win32' else '/dev/null'
 
-class SlotBuffer():
-    data='00000000'
 
-class KTX_RenderSlot(bpy.types.Operator):
+class SlotBuffer():
+    data = '00000000'
+
+
+class KTX_RenderSlot(Operator):
     bl_label = "Select Render Slot"
     bl_idname = "ktx.renderslot"
     bl_description = ("Select Render Slot\n"
-                      "> denotes active slot\n"
-                      "* denotes occupied slot")
+                      "Note: Dot Besides the number slot has data\n"
+                      "colored dot has data and it's active")
 
     number = IntProperty()
-    
+
     def execute(self, context):
-        bpy.data.images['Render Result'].render_slots.active_index=self.number
+        bpy.data.images['Render Result'].render_slots.active_index = self.number
+
         return {'FINISHED'}
 
-class KTX_CheckSlots(bpy.types.Operator):
+
+class KTX_CheckSlots(Operator):
     bl_label = "Check Render Slots"
     bl_idname = "ktx.checkslots"
     bl_description = "Check Render Slots Occupation"
@@ -58,53 +63,56 @@ class KTX_CheckSlots(bpy.types.Operator):
         slots = ''
         i = 0
         for i in range(8):
-            img.render_slots.active_index= i
+            img.render_slots.active_index = i
             try:
                 img.save_render(nullpath)
                 slots = slots + '1'
             except:
                 slots = slots + '0'
 
-        bpy.context.scene.ktx_occupied_render_slots.data=slots
-        img.render_slots.active_index= active
+        bpy.context.scene.ktx_occupied_render_slots.data = slots
+        img.render_slots.active_index = active
+
         return {'FINISHED'}
+
 
 def ui(self, context):
         layout = self.layout
         row = layout.row(align=True)
+        row.alignment = 'LEFT'
         try:
-            row.alignment='LEFT'
-            active=bpy.data.images['Render Result'].render_slots.active_index
+            active = bpy.data.images['Render Result'].render_slots.active_index
             row = layout.row(align=True)
-            row.alignment='EXPAND'
+            row.alignment = 'EXPAND'
             i = 0
             for i in range(8):
-                if i==active:
-                    label='>'+str(i+1)
-                else:
-                    label=str(i+1)
-                if bpy.context.scene.ktx_occupied_render_slots.data[i] == '1':
-                    row.operator('ktx.renderslot', text=label+'*').number=i
-                else:
-                    row.operator('ktx.renderslot', text=label).number=i
+                test_active = bool(bpy.context.scene.ktx_occupied_render_slots.data[i] == '1')
+                icons = "LAYER_USED" if test_active else "BLANK1"
+                label = "["+str(i + 1)+"]" if i == active else str(i + 1)
+                row.operator('ktx.renderslot', text=label, icon=icons).number = i
         except:
-            layout.operator("render.render", text="No render slots available yet")
+            row.label(text="No Render Slots available yet", icon="INFO")
+
 
 @persistent
 def ktx_render_handler(scene):
     bpy.ops.ktx.checkslots()
 
+
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.RENDER_PT_render.prepend(ui)
     bpy.types.Scene.ktx_occupied_render_slots = SlotBuffer()
+
     bpy.app.handlers.render_post.append(ktx_render_handler)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.types.RENDER_PT_render.remove(ui)
     del bpy.types.Scene.ktx_occupied_render_slots
+
     bpy.app.handlers.render_post.remove(ktx_render_handler)
+
 
 if __name__ == "__main__":
     register()
