@@ -42,7 +42,7 @@ class KTX_RenderSlot(Operator):
     bl_idname = "ktx.renderslot"
     bl_description = ("Select Render Slot\n"
                       "Note: Dot Besides the number slot has data\n"
-                      "colored dot has data and it's active")
+                      "< is active slot")
 
     number = IntProperty()
 
@@ -86,9 +86,10 @@ def ui(self, context):
             row.alignment = 'EXPAND'
             i = 0
             for i in range(8):
+                is_active = bool(i==active)
                 test_active = bool(bpy.context.scene.ktx_occupied_render_slots.data[i] == '1')
-                icons = "LAYER_USED" if test_active else "BLANK1"
-                label = "["+str(i + 1)+"]" if i == active else str(i + 1)
+                icons = "LAYER_ACTIVE" if test_active else "BLANK1"
+                label = str(i + 1)+"<" if is_active else str(i + 1)
                 row.operator('ktx.renderslot', text=label, icon=icons).number = i
         except:
             row.label(text="No Render Slots available yet", icon="INFO")
