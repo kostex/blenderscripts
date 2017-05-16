@@ -1,21 +1,38 @@
-# NOW HEAR THIS #
-# This addon has been accepted in the blender addon contrib repositories #
-# So you don't have to download this.. it's already in blender! #
-
-bl_info = {
-    "name": "KTX Selectbuffer",
-    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 3),
-    "blender": (2, 7, 0),
-    "location": "View3D > Properties",
-    "category": "3D View"}
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
 
 import bpy
 from bpy.types import Panel
 from bpy.props import StringProperty
 
-class Oldbuffer():
+
+bl_info = {
+    "name": "KTX Selectbuffer",
+    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
+    "version": (1, 3, 1),
+    "blender": (2, 7, 0),
+    "location": "View3D > Properties",
+    "category": "3D View"}
+
+
+class Oldbuffer:
     data = []
+
 
 class KTX_Selectbuffer_Mutate(bpy.types.Operator):
     bl_label = "select buffer mutate"
@@ -26,23 +43,23 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
                       "A.intersection(B) elements common to A and B")
 
     operation = StringProperty()
-    
+
     def execute(self, context):
-        old_buffer=bpy.context.scene.ktx_selectbuffer
+        old_buffer = bpy.context.scene.ktx_selectbuffer
         emode = bpy.context.tool_settings.mesh_select_mode
 
-        c_mode=bpy.context.object.mode
+        c_mode = bpy.context.object.mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        if emode[0]==True:
+        if emode[0]:
             all_vefs = bpy.context.object.data.vertices
-        elif emode[1]==True:
+        elif emode[1]:
             all_vefs = bpy.context.object.data.edges
-        elif emode[2]==True:
+        elif emode[2]:
             all_vefs = bpy.context.object.data.polygons
 
         selected_vefs = [vef for vef in all_vefs if vef.select]
-        selected_vefs_buffer=[]
+        selected_vefs_buffer = []
         for vef in selected_vefs:
             selected_vefs_buffer.append(vef.index)
         if self.operation == 'union':
@@ -57,12 +74,12 @@ class KTX_Selectbuffer_Mutate(bpy.types.Operator):
             resulting_vefs = selected_vefs_buffer
         elif self.operation == 'clear':
             resulting_vefs = []
-        old_buffer.data=resulting_vefs
-        bpy.ops.object.mode_set(mode = 'EDIT') 
-        bpy.ops.mesh.select_all(action = 'DESELECT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')         
+        old_buffer.data = resulting_vefs
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         for vef in resulting_vefs:
-             all_vefs[vef].select=True
+            all_vefs[vef].select = True
         bpy.ops.object.mode_set(mode=c_mode)
 
         bpy.ops.ed.undo_push()
@@ -101,11 +118,13 @@ class KTX_Selectbuffer(bpy.types.Panel):
 
 def register():
     bpy.utils.register_module(__name__)
-    bpy.types.Scene.ktx_selectbuffer = Oldbuffer()
+    bpy.types.Scene.ktx_selectbuffer = Oldbuffer
+
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     del bpy.types.Scene.ktx_selectbuffer
+
 
 if __name__ == "__main__":
     register()
