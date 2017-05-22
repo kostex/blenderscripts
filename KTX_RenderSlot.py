@@ -26,7 +26,7 @@ from bpy.app.handlers import persistent
 bl_info = {
     "name": "KTX RenderSlot",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 2, 2),
+    "version": (1, 2, 3),
     "blender": (2, 7, 0),
     "location": "Properties Editor > Render > Render",
     "category": "Render"}
@@ -66,13 +66,8 @@ class KTX_RenderSlot(Operator):
 
         return {'FINISHED'}
 
-
-class KTX_CheckSlots(Operator):
-    bl_label = "Check Render Slots"
-    bl_idname = "ktx.checkslots"
-    bl_description = "Check Render Slots Occupation"
-
-    def execute(self, context):
+@persistent
+def checkslots(scene):
         img = bpy.data.images['Render Result']
         active = img.render_slots.active_index
         slots = ''
@@ -85,11 +80,11 @@ class KTX_CheckSlots(Operator):
                 slots = slots + '0'
 
         bpy.context.scene.ktx_occupied_render_slots.data = slots
-        if bpy.context.user_preferences.addons[__name__].preferences.auto_advance_slot and active <= 6:
+        if bpy.context.user_preferences.addons[__name__].preferences.auto_advance_slot:
             active += 1
+            if active == 8:
+                active = 0
         img.render_slots.active_index = active
-
-        return {'FINISHED'}
 
 
 def ui(self, context):
@@ -110,17 +105,12 @@ def ui(self, context):
             row.label(text="No Render Slots available yet", icon="INFO")
 
 
-@persistent
-def ktx_render_handler(scene):
-    bpy.ops.ktx.checkslots()
-
-
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.RENDER_PT_render.prepend(ui)
     bpy.types.Scene.ktx_occupied_render_slots = SlotBuffer
 
-    bpy.app.handlers.render_post.append(ktx_render_handler)
+    bpy.app.handlers.render_post.append(checkslots)
 
 
 def unregister():
@@ -129,7 +119,7 @@ def unregister():
     bpy.types.RENDER_PT_render.remove(ui)
     del bpy.types.Scene.ktx_occupied_render_slots
 
-    bpy.app.handlers.render_post.remove(ktx_render_handler)
+    bpy.app.handlers.render_post.remove(checkslots)
 
 
 if __name__ == "__main__":
