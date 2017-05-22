@@ -17,8 +17,8 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
-from bpy.types import Operator
-from bpy.props import IntProperty
+from bpy.types import AddonPreferences, Operator
+from bpy.props import IntProperty, BoolProperty
 from sys import platform
 from bpy.app.handlers import persistent
 
@@ -26,7 +26,7 @@ from bpy.app.handlers import persistent
 bl_info = {
     "name": "KTX RenderSlot",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 2, 1),
+    "version": (1, 2, 2),
     "blender": (2, 7, 0),
     "location": "Properties Editor > Render > Render",
     "category": "Render"}
@@ -37,6 +37,19 @@ nullpath = '/nul' if platform == 'win32' else '/dev/null'
 
 class SlotBuffer:
     data = '00000000'
+
+
+class KTX_Renderslot_Prefs(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    auto_advance_slot = bpy.props.BoolProperty(
+        name="Auto Advance Renderslot",
+        description="Auto Advance to next Renderslot",
+        default=False)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "auto_advance_slot")
 
 
 class KTX_RenderSlot(Operator):
@@ -72,6 +85,8 @@ class KTX_CheckSlots(Operator):
                 slots = slots + '0'
 
         bpy.context.scene.ktx_occupied_render_slots.data = slots
+        if bpy.context.user_preferences.addons[__name__].preferences.auto_advance_slot and active <= 6:
+            active += 1
         img.render_slots.active_index = active
 
         return {'FINISHED'}
@@ -110,6 +125,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_module(__name__)
+
     bpy.types.RENDER_PT_render.remove(ui)
     del bpy.types.Scene.ktx_occupied_render_slots
 
