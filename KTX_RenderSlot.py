@@ -26,7 +26,7 @@ from bpy.app.handlers import persistent
 bl_info = {
     "name": "KTX RenderSlot",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 2, 4),
+    "version": (1, 2, 5),
     "blender": (2, 7, 0),
     "location": "Properties Editor > Render > Render",
     "category": "Render"}
@@ -37,6 +37,19 @@ nullpath = '/nul' if platform == 'win32' else '/dev/null'
 
 class OccupiedSlots:
     data = '00000000'
+
+
+class KTX_Renderslot_Prefs(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    advanced_mode = bpy.props.BoolProperty(
+        name="Advanced Mode",
+        description="Gives the addon some advanced options",
+        default=False)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "advanced_mode")
 
 
 class KTX_RenderSlot(Operator):
@@ -64,11 +77,11 @@ def checkslots(scene):
         try:
             img.save_render(nullpath)
             slots = slots + '1'
-        except:
+        except RuntimeError:
             slots = slots + '0'
 
-    bpy.context.scene.ktx_occupied_render_slots.data = slots
-    if bpy.context.scene.ktx_auto_advance_slot:
+    scene.ktx_occupied_render_slots.data = slots
+    if scene.ktx_auto_advance_slot:
         active += 1
         if active == 8:
             active = 0
@@ -82,7 +95,8 @@ def ui(self, context):
     row.alignment = 'LEFT'
     try:
         active = bpy.data.images['Render Result'].render_slots.active_index
-        row.prop(scn, 'ktx_auto_advance_slot', 'Auto Advance')
+        if bpy.context.user_preferences.addons[__name__].preferences.advanced_mode:
+            row.prop(scn, 'ktx_auto_advance_slot', 'Auto Advance')
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         for i in range(8):
@@ -92,6 +106,7 @@ def ui(self, context):
             label = "[{}]".format(str(i + 1)) if is_active else str(i + 1)
             row.operator('ktx.renderslot', text=label, icon=icons).number = i
     except:
+        scn.ktx_occupied_render_slots.data = '00000000'
         row.label(text="No Render Slots available yet", icon="INFO")
 
 
