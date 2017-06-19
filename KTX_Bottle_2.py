@@ -1,19 +1,45 @@
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
+
+import bpy, mathutils, bmesh
+
+
 bl_info = {
     "name": "KTX Bottle 2",
-    "author": "Roel Koster",
-    "version": (1, 0),
+    "description": "Create a bottle and cap with threads",
+    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
+    "version": (1, 0, 1),
     "blender": (2, 7, 0),
     "location": "View3D > Tools > Create",
+    "warning": "",
+    "wiki_url": "https://github.com/kostex/blenderscripts/",
+#    "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
     "category": "3D View"}
 
 
-import bpy, mathutils, bmesh
 EDIT_MODES = {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_METABALL', 'EDIT_TEXT', 'EDIT_ARMATURE'}
+
 
 class KTXBottle2Sep(bpy.types.Operator):
     bl_idname="wm.ktx_bottle_2_sep"
     bl_label="KTX Create a Bottle and Cap"
     bl_options={'REGISTER','UNDO', 'PRESET'}
+    bl_description = "Creates the bottle and cap with threads"
 
     hide_bottle = bpy.props.BoolProperty(name="Hide Bottle",
         description="Hide Bottle On/Off",

@@ -1,13 +1,36 @@
-bl_info = {
-        "name": "KTX Library Import .OBJ",
-		"version": (2, 0),
-		"blender": (2, 67, 0),
-		"location": "View3D > Add > Mesh > KTX Library Import .OBJ",
-		"description": "Asset Library of the .obj files in the addon's folder",
-        "category": "Add Mesh"}        
- 
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
+
 import bpy
 import os
+
+bl_info = {
+    "name": "KTX Library Import .OBJ",
+    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
+    "version": (2, 0, 1),
+    "blender": (2, 6, 7),
+    "location": "View3D > Add > Mesh > KTX Library Import .OBJ",
+    "description": "Asset Library of the .obj files in the addon's folder",
+    "warning": "",
+    "wiki_url": "https://github.com/kostex/blenderscripts/",
+#    "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
+    "category": "Add Mesh"}        
+
 
 folderDict = {}
 
@@ -22,10 +45,13 @@ if 'addons' not in path_to_addons:
 full_path_to_directory = '/Volumes/DataPartition/DataDocuments/Blender/_Obj'
 
 class opOBJImporter( bpy.types.Operator ):
-    filename = bpy.props.StringProperty()
     bl_idname = "bpt.obj_importer"
+    bl_description = "Object importer"
     bl_label = "Import .OBJ file"
-     
+
+    filename = bpy.props.StringProperty()
+
+
     def execute( self, context ):
         bpy.ops.import_scene.obj(filepath=self.filename)
         return {'FINISHED'}

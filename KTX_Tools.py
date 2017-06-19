@@ -1,21 +1,44 @@
-bl_info = {
-    "name": "KTX Tools",
-    "author": "Roel Koster",
-    "version": (3, 6),
-    "blender": (2, 7, 0),
-    "location": "View3D > Tools",
-    "category": "3D View"}
-
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
 
 import bpy, mathutils, math, random, colorsys, bmesh, operator
 from mathutils import Vector
+
+
+bl_info = {
+    "name": "KTX Tools",
+    "description": "Various mesh/material creation tools",
+    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
+    "version": (3, 6, 1),
+    "blender": (2, 7, 0),
+    "location": "View3D > Tools",
+    "warning": "",
+    "wiki_url": "https://github.com/kostex/blenderscripts/",
+#    "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
+    "category": "3D View"}
+
 
 EDIT_MODES = {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_METABALL', 'EDIT_TEXT', 'EDIT_ARMATURE'}
 
 
 class KTXAssignRandomDiffuseColors(bpy.types.Operator):
-    
     bl_idname = "wm.ktx_assign_random_diffuse_colors"
+    bl_description = "Assign random diffuse colors"
     bl_label = "Rnd Diff. Colors"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -71,6 +94,7 @@ class KTXAssignRandomDiffuseColors(bpy.types.Operator):
 
 class KTXAddRandomCubes(bpy.types.Operator):
     bl_idname = "wm.ktx_add_random_cubes"
+    bl_description = "Add random cubes"
     bl_label = "Rnd Cubes"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -129,6 +153,7 @@ class KTXAddRandomCubes(bpy.types.Operator):
 
 class KTXAddRandomCopies(bpy.types.Operator):
     bl_idname = "wm.ktx_add_random_copies"
+    bl_description = "Add random copies of selected object"
     bl_label = "Rnd Copies"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -194,6 +219,7 @@ class KTXAddRandomCopies(bpy.types.Operator):
 
 class KTXAssignMaterials(bpy.types.Operator):
     bl_idname = "wm.ktx_assign_materials"
+    bl_description = "Add default materials to selected objects"
     bl_label = "Add Deflt Mtrls"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -207,6 +233,7 @@ class KTXAssignMaterials(bpy.types.Operator):
 
 class KTXAddGlossyMixShaders(bpy.types.Operator):
     bl_idname = "wm.ktx_add_glossy_mix_shaders"
+    bl_description = "Add a glossy shader to current shader via mix shader node"
     bl_label = "Add G/M Shaders"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -236,6 +263,7 @@ class KTXAddGlossyMixShaders(bpy.types.Operator):
 
 class KTXAddSubsurfCreases(bpy.types.Operator):
     bl_idname = "wm.ktx_add_subsurf_creases"
+    bl_description = "Add subsurface modifier to selected objects and assign crease value"
     bl_label = "Add SubSurf Crsd"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -268,6 +296,7 @@ class KTXAddSubsurfCreases(bpy.types.Operator):
 
 class KTXSetViewportColor(bpy.types.Operator):
     bl_idname = "wm.ktx_set_viewport_color"
+    bl_description = "Set viewport color to the diffuse shader color"
     bl_label = "Set View Color"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -279,6 +308,7 @@ class KTXSetViewportColor(bpy.types.Operator):
 
 class KTXEraseAllMaterials(bpy.types.Operator):
     bl_idname = "wm.ktx_erase_all_materials"
+    bl_description = "Erase all unused materials"
     bl_label = "Erase Unused Mtrls"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -292,6 +322,7 @@ class KTXEraseAllMaterials(bpy.types.Operator):
 
 class KTXEraseUnusedTextures(bpy.types.Operator):
     bl_idname = "wm.ktx_erase_unused_textures"
+    bl_description = "Erase unused textures"
     bl_label = "Erase Unused Txtrs"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -310,6 +341,7 @@ class KTXEraseUnusedTextures(bpy.types.Operator):
 
 class KTXEraseUnusedPalettes(bpy.types.Operator):
     bl_idname = "wm.ktx_erase_unused_palettes"
+    bl_description = "Erase unused palettes"
     bl_label = "Erase Unused Palettes"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -323,6 +355,7 @@ class KTXEraseUnusedPalettes(bpy.types.Operator):
 
 class KTXFunction(bpy.types.Operator):
     bl_idname="wm.ktx_function"
+    bl_description = "Function plotter"
     bl_label="KTX Function"
     bl_options={'REGISTER','UNDO'}
 
@@ -392,6 +425,7 @@ class KTXFunction(bpy.types.Operator):
 
 class KTXCylinders(bpy.types.Operator):
     bl_idname="wm.ktx_cylinders"
+    bl_description = "Add cylinder 'stairs'"
     bl_label="KTX Cylinders"
     bl_options={'REGISTER','UNDO'}
 
@@ -457,6 +491,7 @@ class KTXCylinders(bpy.types.Operator):
 
 class KTXCylinderGrid(bpy.types.Operator):
     bl_idname="wm.ktx_cylinder_grid"
+    bl_description = "Add cylinder grid"
     bl_label="KTX Cylinder Grid"
     bl_options={'REGISTER','UNDO'}
 
@@ -506,6 +541,7 @@ class KTXCylinderGrid(bpy.types.Operator):
 
 class KTXObjectGrid(bpy.types.Operator):
     bl_idname="wm.ktx_object_grid"
+    bl_description = "Add object grid"
     bl_label="KTX Object Grid"
     bl_options={'REGISTER','UNDO'}
 
@@ -553,6 +589,7 @@ class KTXObjectGrid(bpy.types.Operator):
 
 class KTXPolarArray(bpy.types.Operator):
     bl_idname="wm.ktx_polar_array"
+    bl_description = "Add polar array"
     bl_label="KTX Polar Array"
     bl_options={'REGISTER','UNDO'}
 
@@ -568,7 +605,6 @@ class KTXPolarArray(bpy.types.Operator):
     count=bpy.props.IntProperty(name="Number of Items",
         description="Number of Arrayed Items",
         default=8)
-   
 
     def execute(self,context):
       inc=(360/self.count)
@@ -587,6 +623,7 @@ class KTXPolarArray(bpy.types.Operator):
 
 class KTXPolarArray_old(bpy.types.Operator):
     bl_idname="wm.ktx_polar_array_old"
+    bl_description = "Add polar array (old)"
     bl_label="KTX Polar Array Old"
     bl_options={'REGISTER','UNDO'}
 
@@ -602,7 +639,6 @@ class KTXPolarArray_old(bpy.types.Operator):
     count=bpy.props.IntProperty(name="Number of Items",
         description="Number of Arrayed Items",
         default=8)
-   
 
     def execute(self,context):
       inc=(360/self.count)
@@ -620,6 +656,7 @@ class KTXPolarArray_old(bpy.types.Operator):
 
 class KTXSpiralCircles(bpy.types.Operator):
     bl_idname="wm.ktx_spiral_circles"
+    bl_description = "Add circles on a spiral"
     bl_label="KTX Circles on a spiral"
     bl_options={'REGISTER','UNDO'}
 
@@ -712,6 +749,7 @@ class KTXSpiralCircles(bpy.types.Operator):
 
 class KTXPolish(bpy.types.Operator):
     bl_idname = "wm.ktx_polish"
+    bl_description = "Polish mesh"
     bl_label = "Polish"
     bl_options = {'REGISTER','UNDO'}
 
@@ -736,6 +774,7 @@ class KTXPolish(bpy.types.Operator):
 
 class KTXTriTangle(bpy.types.Operator):
     bl_idname = "wm.ktx_tri_tangle"
+    bl_description = "Create ordered tangle triangle"
     bl_label = "Create Ordered Tangle Triangle"
     bl_options = {'REGISTER','UNDO'}
 
@@ -878,6 +917,7 @@ class KTXTriTangle(bpy.types.Operator):
 
 class KTXSpiroGraph2(bpy.types.Operator):
     bl_idname="wm.ktx_spirograph_2"
+    bl_description = "Create a spirograph curve"
     bl_label="KTX Make a Spirograph 2"
     bl_options={'REGISTER','UNDO', 'PRESET'}
 
@@ -959,6 +999,7 @@ class KTXSpiroGraph2(bpy.types.Operator):
 
 class KTXObjLib(bpy.types.Operator):
     bl_idname="wm.ktx_objlib"
+    bl_description = "Append object from KTX_Objects.blend"
     bl_label="KTX Object Library"
     bl_options={'REGISTER','UNDO'}
 
@@ -987,6 +1028,7 @@ class KTXObjLib(bpy.types.Operator):
 
 class KTXBottle(bpy.types.Operator):
     bl_idname="wm.ktx_bottle_1"
+    bl_description = "Create a bottle and Cap (v1)"
     bl_label="KTX Create a Bottle and Cap"
     bl_options={'REGISTER','UNDO', 'PRESET'}
 
@@ -1436,6 +1478,7 @@ class KTXBottle(bpy.types.Operator):
 
 class KTXBottle2(bpy.types.Operator):
     bl_idname="wm.ktx_bottle_2"
+    bl_description = "Create a bottle and cap (v2)"
     bl_label="KTX Create a Bottle and Cap v2"
     bl_options={'REGISTER','UNDO', 'PRESET'}
 

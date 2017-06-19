@@ -1,16 +1,36 @@
-bl_info = {
-    "name": "KTX Node Tools",
-	"author": "Roel Koster, kostex (irc), koelooptiemanna",
-	"version": (1 ,3),
-	"blender": (2, 75, 0),
-	"location": "Node Editor Toolbar Texture Tab and Add Menu (Shift A)",
-	"description": "Quick Tools from the Node Editor",
-	"category": "Node"
-}
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
 
 import bpy
 from bpy.types import Operator, Panel, Menu
 from bpy.props import EnumProperty, BoolProperty, IntProperty, StringProperty
+
+
+bl_info = {
+    "name": "KTX Node Tools",
+    "description": "Node Editor enhancement (Shift A)",
+    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
+    "version": (1 ,3, 2),
+    "blender": (2, 75, 0),
+    "location": "Node Editor Toolbar Texture Tab and Add Menu (Shift A)",
+    "category": "Node"
+}
+
 
 # thanks to NodeWrangler for nwcheck,nwbase
 def nw_check(context):
@@ -28,6 +48,7 @@ class NWBase:
 
 class KTXImageTextureMenu(Operator,NWBase):
     bl_idname="wm.ktx_node_imtexmenu"
+    bl_description="Create an empty image"
     bl_label="Create Image Texture Node"
     bl_options = {'REGISTER','UNDO'}
 
@@ -107,6 +128,7 @@ class KTXImageTextureMenu(Operator,NWBase):
     
 class KTXSetViewportColorFromSelectedNode(bpy.types.Operator):
     bl_idname = "wm.ktx_set_viewport_color_from_selected_node"
+    bl_description="Set viewport color from selected shader node"
     bl_label = "Set Viewport Color"
     bl_option = {'REGISTER', 'UNDO'}
 
@@ -125,6 +147,7 @@ class KTXSetViewportColorFromSelectedNode(bpy.types.Operator):
 
 class KTXAddMixGlossy(bpy.types.Operator):
     bl_idname = "wm.ktx_add_mix_glossy"
+    bl_description = "Add a mix and glossy node"
     bl_label = "Add Mix and Glossy Nodes"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -156,6 +179,7 @@ class KTXAddMixGlossy(bpy.types.Operator):
 
 class KTXAddMixGlossyFresnel(bpy.types.Operator):
     bl_idname = "wm.ktx_add_mix_glossy_fresnel"
+    bl_description="Add a mix and glossy node with fresnel control"
     bl_label = "Add Mix and Glossy Nodes with Fresnel Control"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -196,6 +220,7 @@ class KTXAddMixGlossyFresnel(bpy.types.Operator):
 
 class KTXAddNormalTexture(bpy.types.Operator):
     bl_idname = "wm.ktx_add_normal_texture"
+    bl_description="Add normal texture"
     bl_label = "Add Normal Texture"
     bl_options = {'REGISTER', 'UNDO'}
 
