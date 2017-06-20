@@ -16,13 +16,13 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import bpy
+
 if "bpy" in locals():
     import imp
 #    imp.reload(KTXMenu_set_viewport_color)
-#else:
+# else:
 #    import KTXMenu_set_viewport_color
-
-import bpy
 
 
 bl_info = {
@@ -34,7 +34,7 @@ bl_info = {
     "location": "View3D > Properties",
     "warning": "",
     "wiki_url": "https://github.com/kostex/blenderscripts/",
-#    "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
+#   "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
     "category": "3D View"}
 
 
@@ -44,7 +44,7 @@ class KTXMoveToWorldOrigin(bpy.types.Operator):
     bl_idname = "wm.ktx_move_to_world_origin"
 
     def execute(self, context):
-        bpy.context.active_object.location=(0,0,0)
+        bpy.context.active_object.location = (0, 0, 0)
         return {'FINISHED'}
 
 
@@ -82,14 +82,16 @@ class KTXCustom3DViewMenu(bpy.types.Menu):
 
 addon_keymaps = []
 
+
 def register():
     bpy.utils.register_class(KTXCustom3DViewMenu)
     bpy.utils.register_class(KTXMoveToWorldOrigin)
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name="3D View", space_type="VIEW_3D")
-    kmi = km.keymap_items.new('wm.call_menu', 'Q', 'PRESS',alt=True)
+    kmi = km.keymap_items.new('wm.call_menu', 'Q', 'PRESS', alt=True)
     kmi.properties.name = 'view3D.ktx_custom_3dview_menu'
     addon_keymaps.append(km)
+
 
 def unregister():
     bpy.utils.unregister_class(KTXCustom3DViewMenu)

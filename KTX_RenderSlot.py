@@ -25,7 +25,7 @@ from bpy.app.handlers import persistent
 
 bl_info = {
     "name": "KTX RenderSlot",
-	"description": "Display/select renderslot in the render tab",
+    "description": "Display/select renderslot in the render tab",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
     "version": (1, 2, 6),
     "blender": (2, 7, 0),
