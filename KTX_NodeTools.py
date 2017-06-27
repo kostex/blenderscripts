@@ -25,7 +25,7 @@ bl_info = {
     "name": "KTX Node Tools",
     "description": "Node Editor enhancement (Shift A)",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 3, 3),
+    "version": (1, 3, 4),
     "blender": (2, 75, 0),
     "location": "Node Editor Toolbar Texture Tab and Add Menu (Shift A)",
     "category": "Node"
@@ -265,6 +265,48 @@ class KTXAddNormalTexture(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class KTXAddMixDiffuseMask(bpy.types.Operator):
+    bl_idname = "wm.ktx_add_mix_diffuse_mask"
+    bl_description = "Add a mix and diffuse node with mask control"
+    bl_label = "Add Mix and Diffuse Nodes with Mask Control"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    n_type = StringProperty()
+
+    def execute(self, context):
+        mat = bpy.context.active_object.active_material
+        tree = mat.node_tree
+        nodes = tree.nodes
+        links = tree.links
+        for node in nodes:
+            if node.select:
+                link_to = node.outputs[0].links[0].to_socket
+                node.location.x = node.location.x - 200
+                node_mix = nodes.new('ShaderNodeMixShader')
+                node_mix.inputs[0].default_value = 0.1
+                node_mix.location.x = node.location.x + 200
+                node_mix.location.y = node.location.y
+                node_mix.select = False
+
+                node_glossy = nodes.new('ShaderNodeBsdfDiffuse')
+                node_glossy.inputs[1].default_value = 0
+                node_glossy.location.x = node.location.x
+                node_glossy.location.y = node.location.y - 150
+                node_glossy.select = False
+
+                node_mixtype = nodes.new(self.n_type)
+                node_mixtype.location.x = node.location.x
+                node_mixtype.location.y = node.location.y + 150
+                node_mixtype.select = False
+
+                links.remove(node.outputs[0].links[0])
+                links.new(node_mixtype.outputs[0], node_mix.inputs[0])
+                links.new(node.outputs[0], node_mix.inputs[1])
+                links.new(node_glossy.outputs[0], node_mix.inputs[2])
+                links.new(node_mix.outputs[0], link_to)
+        return {'FINISHED'}
+
+
 class KTXNodesPanel(bpy.types.Panel):
     bl_label = "KTX Image Node"
     bl_idname = "SCENE_KTX_layout"
@@ -287,6 +329,9 @@ class KTXNodeMenu(bpy.types.Menu):
         layout.operator("wm.ktx_add_mix_glossy")
         layout.operator("wm.ktx_add_mix_glossy_fresnel", text="Add Mix and Glossy Nodes with Fresnel Control").n_type = "ShaderNodeFresnel"
         layout.operator("wm.ktx_add_mix_glossy_fresnel", text="Add Mix and Glossy Nodes with LayerWeight Control").n_type = "ShaderNodeLayerWeight"
+        layout.operator("wm.ktx_add_mix_diffuse_mask", text="Add Mix and Diffuse Nodes with Texture Mask").n_type = "ShaderNodeTexImage"
+        layout.operator("wm.ktx_add_mix_diffuse_mask", text="Add Mix and Diffuse Nodes with Noise Mask").n_type = "ShaderNodeTexNoise"
+        layout.operator("wm.ktx_add_mix_diffuse_mask", text="Add Mix and Diffuse Nodes with Voronoi Mask").n_type = "ShaderNodeTexVoronoi"
         layout.operator("wm.ktx_add_normal_texture")
 
         layout.operator("wm.ktx_set_viewport_color_from_selected_node")
