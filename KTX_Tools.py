@@ -30,8 +30,8 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 6, 2),
-    "blender": (2, 7, 0),
+    "version": (3, 7, 0),
+    "blender": (2, 80, 0),
     "location": "View3D > Tools",
     "warning": "",
     "wiki_url": "https://github.com/kostex/blenderscripts/",
@@ -901,9 +901,8 @@ class KTXTriTangle(bpy.types.Operator):
 
         ob = bpy.data.objects.new('OrdTri', me)
         ob.location = (0, 0, 0)
-        bpy.context.scene.objects.link(ob)
-        ob.select = True
-        bpy.context.scene.objects.active = ob
+        bpy.context.scene.collection.objects.link(ob)
+        ob.select_set('SELECT')
         if self.smooth:
             bpy.ops.object.shade_smooth()
             bpy.context.object.data.use_auto_smooth = True
@@ -931,9 +930,9 @@ class KTXTriTangle(bpy.types.Operator):
         obj1 = bpy.context.active_object
         obj1.rotation_euler = (0, 0, math.radians(240))
 
-        ob.select = True
-        obj.select = True
-        obj1.select = True
+        ob.select_set('SELECT')
+        obj.select_set('SELECT')
+        obj1.select_set('SELECT')
         bpy.ops.object.duplicate_move_linked()
         bpy.ops.transform.rotate(value=math.radians(180), axis=(0, 0, 1))
         bpy.ops.transform.rotate(
@@ -1394,17 +1393,17 @@ class KTXBottle(bpy.types.Operator):
         obj = bpy.data.objects.new("Bottle", me)
         obj.location = bpy.context.scene.cursor_location
         obj.location.z = (obj.location.z + self.z5) * self.overall_scale
-        scene.objects.link(obj)
+        scene.collection.objects.link(obj)
         if self.subs_onoff:
             obj.modifiers.new("subd", type='SUBSURF')
             obj.modifiers["subd"].levels = 2
             obj.modifiers["subd"].render_levels = 3
 
-        bpy.context.scene.objects.active = obj
+        obj.select_set('SELECT')
         if self.hide_bottle:
-            bpy.context.object.hide = True
+            obj.hide_viewport = True
         else:
-            bpy.context.object.hide = False
+            obj.hide_viewport = False
 
 
 #------Dop/Cap
@@ -1517,22 +1516,22 @@ class KTXBottle(bpy.types.Operator):
         obj.location = bpy.context.scene.cursor_location
         obj.location.z = (obj.location.z + self.thread_height /
                           2 + self.z5) * self.overall_scale
-        scene.objects.link(obj)
+        scene.collection.objects.link(obj)
         if self.subs_onoff:
             obj.modifiers.new("subd", type='SUBSURF')
             obj.modifiers["subd"].levels = 2
             obj.modifiers["subd"].render_levels = 3
 
-        bpy.context.scene.objects.active = obj
+        obj.select_set('SELECT')
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.normals_make_consistent(inside=False)
         bpy.ops.object.editmode_toggle()
 
         if self.hide_cap:
-            bpy.context.object.hide = True
+            obj.hide_viewport = True
         else:
-            bpy.context.object.hide = False
+            obj.hide_viewport = False
 
         return {'FINISHED'}
 
@@ -1811,17 +1810,17 @@ class KTXBottle2(bpy.types.Operator):
         obj.location = bpy.context.scene.cursor_location
         obj.location.z = obj.location.z + \
             (self.z5 + self.nl + self.depth) * self.overall_scale
-        scene.objects.link(obj)
+        scene.collection.objects.link(obj)
         if self.subs_onoff:
             obj.modifiers.new("subd", type='SUBSURF')
             obj.modifiers["subd"].levels = 2
             obj.modifiers["subd"].render_levels = 3
 
-        bpy.context.scene.objects.active = obj
+        obj.select_set('SELECT')
         if self.hide_bottle:
-            bpy.context.object.hide = True
+            obj.hide_viewport = True
         else:
-            bpy.context.object.hide = False
+            obj.hide_viewport = False
 
 
 #------Dop/Cap
@@ -1933,22 +1932,22 @@ class KTXBottle2(bpy.types.Operator):
         obj.location.z = obj.location.z + \
             (self.thread_height / 2 + self.z5 +
              self.nl + self.depth) * self.overall_scale
-        scene.objects.link(obj)
+        scene.collection.objects.link(obj)
         if self.subs_onoff:
             obj.modifiers.new("subd", type='SUBSURF')
             obj.modifiers["subd"].levels = 2
             obj.modifiers["subd"].render_levels = 3
 
-        bpy.context.scene.objects.active = obj
+        obj.select_set('SELECT')
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.normals_make_consistent(inside=False)
         bpy.ops.object.editmode_toggle()
 
         if self.hide_cap:
-            bpy.context.object.hide = True
+            obj.hide_viewport = True
         else:
-            bpy.context.object.hide = False
+            obj.hide_viewport = False
 
 
 #------Bottle Body
@@ -1991,7 +1990,7 @@ class KTXBottle2(bpy.types.Operator):
             obj.location = bpy.context.scene.cursor_location
             obj.location.z = obj.location.z + \
                 (self.z5 + self.nl + self.depth) * self.overall_scale
-            scene.objects.link(obj)
+            scene.collection.objects.link(obj)
 
             obj.modifiers.new("spin", type="SCREW")
             obj.modifiers["spin"].steps = self.v
@@ -2011,12 +2010,12 @@ class KTXBottle2(bpy.types.Operator):
                 obj.modifiers["subd"].levels = 2
                 obj.modifiers["subd"].render_levels = 3
 
-            bpy.context.scene.objects.active = obj
+            obj.select_set('SELECT')
 
             if self.hide_bottle_body:
-                bpy.context.object.hide = True
+                obj.hide_viewport = True
             else:
-                bpy.context.object.hide = False
+                bpy.hide_viewport = False
 
         return {'FINISHED'}
 
@@ -2061,12 +2060,46 @@ class KTXPanel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_set_viewport_color")
 
 
+classes = (
+    KTXAssignRandomDiffuseColors,
+    KTXAddRandomCubes,
+    KTXAddRandomCopies,
+    KTXAssignMaterials,
+    KTXAddGlossyMixShaders,
+    KTXAddSubsurfCreases,
+    KTXSetViewportColor,
+    KTXEraseAllMaterials,
+    KTXEraseUnusedTextures,
+    KTXEraseUnusedPalettes,
+    KTXFunction,
+    KTXCylinders,
+    KTXCylinderGrid,
+    KTXObjectGrid,
+    KTXPolarArray,
+    KTXPolarArray_old,
+    KTXSpiralCircles,
+    KTXPolish,
+    KTXTriTangle,
+    KTXSpiroGraph2,
+    KTXObjLib,
+    KTXBottle,
+    KTXBottle2,
+    KTXPanel
+)
+
+
 def register():
-    bpy.utils.register_module(__name__)
+    from bpy.utils import register_class
+    
+    for cls in classes:
+        register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    from bpy.utils import unregister_class
+
+    for cls in classes:
+        unregister_class(cls)
 
 
 if __name__ == "__main__":

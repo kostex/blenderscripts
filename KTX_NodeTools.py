@@ -25,8 +25,8 @@ bl_info = {
     "name": "KTX Node Tools",
     "description": "Node Editor enhancement (Shift A)",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 3, 4),
-    "blender": (2, 75, 0),
+    "version": (1, 4, 1),
+    "blender": (2, 79, 0),
     "location": "Node Editor Toolbar Texture Tab and Add Menu (Shift A)",
     "category": "Node"
 }
@@ -340,15 +340,33 @@ class KTXNodeMenu(bpy.types.Menu):
 def menu_func(self, context):
     self.layout.menu("wm.ktx_node_menu")
 
+classes =(
+    KTXNodeMenu,
+    KTXNodesPanel,
+    KTXAddMixGlossy,
+    KTXAddNormalTexture,
+    KTXImageTextureMenu,
+    KTXAddMixDiffuseMask,
+    KTXAddMixGlossyFresnel,
+    KTXSetViewportColorFromSelectedNode
+)
 
 def register():
-    bpy.utils.register_module(__name__)
+    from bpy.utils import register_class
+    
     bpy.types.NODE_MT_add.append(menu_func)
+
+    for cls in classes:
+        register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    from bpy.utils import unregister_class
+
     bpy.types.NODE_MT_add.remove(menu_func)
+
+    for cls in classes:
+        unregister_class(cls)
 
 
 if __name__ == "__main__":
