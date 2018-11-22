@@ -1,7 +1,7 @@
 bl_info = {
 	"name": "KTX Library Materials",
 	"author": "Roel Koster",
-	"version": (1, 2),
+	"version": (1, 3),
 	"blender": (2, 80, 0),
 	"location": "Shader Editor > Add > KTX Library Materials",
 	"description": "Add Single Selectable Material from KTX_Objects.blend File in your Scripts Folder",
@@ -94,7 +94,7 @@ def unregister():
 
 	for cls in classes:
 		unregister_class(cls)
-	bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
+	bpy.types.NODE_MT_add.remove(menu_func)
 
 
 if __name__ == "__main__":
