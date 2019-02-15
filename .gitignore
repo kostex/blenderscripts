@@ -1,3 +1,5 @@
+Graswald/
+QBlocker_01/
 fspy_blender/
 AssetGen/
 BRM_UVRotateView.py
@@ -63,3 +65,6 @@ vgroupToMask.py
 DNOISE/
 MB-Lab/
 uv_packmaster/
+ShaderNodesExtra/
+pie-fracture-modifier.py
+tissue-b280-dev/
