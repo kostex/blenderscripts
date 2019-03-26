@@ -1,7 +1,7 @@
 bl_info = {
 	"name": "KTX Library Materials",
 	"author": "Roel Koster",
-	"version": (1, 3),
+	"version": (1, 5),
 	"blender": (2, 80, 0),
 	"location": "Shader Editor > Add > KTX Library Materials",
 	"description": "Add Single Selectable Material from KTX_Objects.blend File in your Scripts Folder",
@@ -15,9 +15,9 @@ import bpy
 from bpy.props import EnumProperty
 
 
-class KTX_Lib_Materials(bpy.types.Operator):
+class KTXLIB_OT_Materials(bpy.types.Operator):
 	"""Create a new Mesh Object"""
-	bl_idname = "mesh.add_ktx_lib_mat"
+	bl_idname = "ktxlib.materials"
 	bl_label = "Material"
 	bl_options = {'REGISTER', 'UNDO'}
 
@@ -54,9 +54,9 @@ class KTX_Lib_Materials(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class KTXLib_add_mat_menu(bpy.types.Menu):
+class KTXLIB_MT_MaterialsMenu(bpy.types.Menu):
 	""""Define the menu"""
-	bl_idname = "KTXLib_add_mat_menu"
+	bl_idname = "KTXLIB_MT_MaterialsMenu"
 	bl_label = "KTX Library Materials"
 
 	def draw(self, context):
@@ -67,18 +67,18 @@ class KTXLib_add_mat_menu(bpy.types.Menu):
 		layout.operator_context = 'INVOKE_REGION_WIN'
 		with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
 			for mat in data_from.materials:
-				layout.operator(KTX_Lib_Materials.bl_idname,
+				layout.operator(KTXLIB_OT_Materials.bl_idname,
 								text=mat, icon="MATERIAL").mats = mat
 
 
 # Registration
 classes = (
-	KTX_Lib_Materials,
-	KTXLib_add_mat_menu
+	KTXLIB_OT_Materials,
+	KTXLIB_MT_MaterialsMenu
 )
 
 def menu_func(self, context):
-	self.layout.menu(KTXLib_add_mat_menu.bl_idname, icon='MATERIAL')
+	self.layout.menu(KTXLIB_MT_MaterialsMenu.bl_idname, icon='MATERIAL')
 
 
 def register():

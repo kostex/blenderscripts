@@ -24,132 +24,132 @@ from bpy.app.handlers import persistent
 
 
 bl_info = {
-    "name": "KTX RenderSlot",
-    "description": "Display/select renderslot in the render tab",
-    "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (1, 3, 3),
-    "blender": (2, 80, 0),
-    "location": "Properties Editor > Render > Render",
-    "warning": "",
-    "wiki_url": "https://github.com/kostex/blenderscripts/",
-    "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
-    "category": "Render"}
+	"name": "KTX RenderSlot",
+	"description": "Display/select renderslot in the render tab",
+	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
+	"version": (1, 3, 4),
+	"blender": (2, 80, 0),
+	"location": "Properties Editor > Render > Render",
+	"warning": "",
+	"wiki_url": "https://github.com/kostex/blenderscripts/",
+	"tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
+	"category": "Render"}
 
 
 nullpath = '/nul' if platform == 'win32' else '/dev/null'
 
 
 class OccupiedSlots:
-    data = '00000000'
+	data = '00000000'
 
 
-class KTX_Renderslot_Prefs(bpy.types.AddonPreferences):
-    bl_idname = __name__
+class KTXRENDERSLOT_Prefs(bpy.types.AddonPreferences):
+	bl_idname = __name__
 
-    advanced_mode : bpy.props.BoolProperty(
-        name="Advanced Mode",
-        description="Gives the addon some advanced options",
-        default=False)
+	advanced_mode : bpy.props.BoolProperty(
+		name="Advanced Mode",
+		description="Gives the addon some advanced options",
+		default=False)
 
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "advanced_mode")
+	def draw(self, context):
+		layout = self.layout
+		layout.prop(self, "advanced_mode")
 
 
-class KTX_RenderSlot(Operator):
-    bl_label = "Select Render Slot"
-    bl_idname = "ktx.renderslot"
-    bl_description = ("Select Render Slot\n"
-                      "Note: Dot next to number means slot has image data\n"
-                      "[x] is active slot")
+class KTXRENDERSLOT_OT_Select(Operator):
+	bl_label = "Select Render Slot"
+	bl_idname = "ktxrenderslot.select"
+	bl_description = ("Select Render Slot\n"
+					  "Note: Dot next to number means slot has image data\n"
+					  "[x] is active slot")
 
-    number : IntProperty()
+	number : IntProperty()
 
-    def execute(self, context):
-        bpy.data.images['Render Result'].render_slots.active_index = self.number
+	def execute(self, context):
+		bpy.data.images['Render Result'].render_slots.active_index = self.number
 
-        return {'FINISHED'}
+		return {'FINISHED'}
 
 
 @persistent
 def checkslots(scene):
-    img = bpy.data.images['Render Result']
-    active = img.render_slots.active_index
-    slots = ''
-    for i in range(0,len(img.render_slots)):
-        img.render_slots.active_index = i
-        try:
-            img.save_render(nullpath)
-            slots = slots + '1'
-        except RuntimeError:
-            slots = slots + '0'
+	img = bpy.data.images['Render Result']
+	active = img.render_slots.active_index
+	slots = ''
+	for i in range(0,len(img.render_slots)):
+		img.render_slots.active_index = i
+		try:
+			img.save_render(nullpath)
+			slots = slots + '1'
+		except RuntimeError:
+			slots = slots + '0'
 
-    if scene.ktx_auto_advance_slot:
-        active += 1
-        if active == len(img.render_slots):
-            img.render_slots.new()
-            slots = slots + '0'
+	if scene.ktx_auto_advance_slot:
+		active += 1
+		if active == len(img.render_slots):
+			img.render_slots.new()
+			slots = slots + '0'
 
-    scene.ktx_occupied_render_slots.data = slots
-    img.render_slots.active_index = active
+	scene.ktx_occupied_render_slots.data = slots
+	img.render_slots.active_index = active
 
 
 def ui(self, context):
-    scn = context.scene
-    layout = self.layout
-    row = layout.row(align=True)
-    row.alignment = 'LEFT'
-    img = bpy.data.images['Render Result']
-    active = img.render_slots.active_index
-    if bpy.context.preferences.addons[__name__].preferences.advanced_mode:
-        row.prop(scn, 'ktx_auto_advance_slot', text='Auto Advance')
-    items = 0
-    row = layout.row(align=True)
-    row.alignment = 'EXPAND'
-    for i in range(0,len(img.render_slots)):
-        is_active = bool(i == active)
-        test_active = bool(scn.ktx_occupied_render_slots.data[i] == '1')
-        icons = "LAYER_ACTIVE" if test_active else "BLANK1"
-        label = "[{}]".format(str(i + 1)) if is_active else str(i + 1)
-        row.operator('ktx.renderslot', text=label, icon=icons).number = i
-        items+=1
-        if items == 8:
-            items=0
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
+	scn = context.scene
+	layout = self.layout
+	row = layout.row(align=True)
+	row.alignment = 'LEFT'
+	img = bpy.data.images['Render Result']
+	active = img.render_slots.active_index
+	if bpy.context.preferences.addons[__name__].preferences.advanced_mode:
+		row.prop(scn, 'ktx_auto_advance_slot', text='Auto Advance')
+	items = 0
+	row = layout.row(align=True)
+	row.alignment = 'EXPAND'
+	for i in range(0,len(img.render_slots)):
+		is_active = bool(i == active)
+		test_active = bool(scn.ktx_occupied_render_slots.data[i] == '1')
+		icons = "LAYER_ACTIVE" if test_active else "BLANK1"
+		label = "[{}]".format(str(i + 1)) if is_active else str(i + 1)
+		row.operator('ktxrenderslot.select', text=label, icon=icons).number = i
+		items+=1
+		if items == 8:
+			items=0
+			row = layout.row(align=True)
+			row.alignment = 'EXPAND'
 
 
 classes = (
-    KTX_RenderSlot,
-    KTX_Renderslot_Prefs
+	KTXRENDERSLOT_OT_Select,
+	KTXRENDERSLOT_Prefs
 )
 
 
 def register():
-    from bpy.utils import register_class
+	from bpy.utils import register_class
 
-    bpy.types.RENDER_PT_context.prepend(ui)
-    bpy.types.Scene.ktx_auto_advance_slot = BoolProperty(default=False, description="Auto Advance to Next Slot after a Render")
-    bpy.types.Scene.ktx_occupied_render_slots = OccupiedSlots
+	bpy.types.RENDER_PT_context.prepend(ui)
+	bpy.types.Scene.ktx_auto_advance_slot = BoolProperty(default=False, description="Auto Advance to Next Slot after a Render")
+	bpy.types.Scene.ktx_occupied_render_slots = OccupiedSlots
 
-    bpy.app.handlers.render_post.append(checkslots)
+	bpy.app.handlers.render_post.append(checkslots)
 
-    for cls in classes:
-        register_class(cls)
+	for cls in classes:
+		register_class(cls)
 
 
 def unregister():
-    from bpy.utils import unregister_class
+	from bpy.utils import unregister_class
 
-    bpy.types.RENDER_PT_context.remove(ui)
-    del bpy.types.Scene.ktx_occupied_render_slots
-    del bpy.types.Scene.ktx_auto_advance_slot
+	bpy.types.RENDER_PT_context.remove(ui)
+	del bpy.types.Scene.ktx_occupied_render_slots
+	del bpy.types.Scene.ktx_auto_advance_slot
 
-    bpy.app.handlers.render_post.remove(checkslots)
+	bpy.app.handlers.render_post.remove(checkslots)
 
-    for cls in classes:
-        unregister_class(cls)
+	for cls in classes:
+		unregister_class(cls)
 
 
 if __name__ == "__main__":
-    register()
+	register()

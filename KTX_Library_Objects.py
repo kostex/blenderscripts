@@ -1,7 +1,7 @@
 bl_info = {
 	"name": "KTX Library Objects",
 	"author": "Roel Koster",
-	"version": (1, 1),
+	"version": (1, 3),
 	"blender": (2, 80, 0),
 	"location": "View3D > Add > Mesh > KTX Library Objects",
 	"description": "Add Single Selectable Object from KTX_Objects.blend File in your Scripts Folder",
@@ -15,9 +15,9 @@ import bpy
 from bpy.props import EnumProperty
 
 
-class KTX_Lib_Objects(bpy.types.Operator):
+class KTXLIB_OT_Objects(bpy.types.Operator):
 	"""Create a new Mesh Object"""
-	bl_idname = "mesh.add_ktx_lib_object"
+	bl_idname = "ktxlib.objects"
 	bl_label = "Object"
 	bl_options = {'REGISTER', 'UNDO'}
 
@@ -45,9 +45,9 @@ class KTX_Lib_Objects(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class KTXLib_add_object_menu(bpy.types.Menu):
+class KTXLIB_MT_ObjectsMenu(bpy.types.Menu):
 	""""Define the menu"""
-	bl_idname = "KTXLib_add_object_menu"
+	bl_idname = "KTXLIB_MT_ObjectsMenu"
 	bl_label = "KTX Library Objects"
 
 	def draw(self, context):
@@ -58,18 +58,18 @@ class KTXLib_add_object_menu(bpy.types.Menu):
 		layout.operator_context = 'INVOKE_REGION_WIN'
 		with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
 			for ob in data_from.objects:
-				layout.operator(KTX_Lib_Objects.bl_idname,
+				layout.operator(KTXLIB_OT_Objects.bl_idname,
 								text=ob, icon="MESH_ICOSPHERE").source = ob
 
 
 # Registration
 classes = (
-	KTX_Lib_Objects,
-	KTXLib_add_object_menu
+	KTXLIB_OT_Objects,
+	KTXLIB_MT_ObjectsMenu
 )
 
 def menu_func(self, context):
-	self.layout.menu(KTXLib_add_object_menu.bl_idname, icon='MOD_SCREW')
+	self.layout.menu(KTXLIB_MT_ObjectsMenu.bl_idname, icon='MOD_SCREW')
 
 
 def register():
