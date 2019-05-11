@@ -25,7 +25,7 @@ bl_info = {
 	"name": "KTX Bottle 2",
 	"description": "Create a bottle and cap with threads",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 1, 1),
+	"version": (1, 1, 2),
 	"blender": (2, 80, 0),
 	"location": "View3D > Tools > Create",
 	"warning": "",
@@ -322,9 +322,9 @@ class KTXBOTTLE2_OT_Sep(bpy.types.Operator):
 
 		bpy.context.view_layer.objects.active = obj
 		if self.hide_bottle:
-			obj.hide_viewport = True
+			obj.hide_set(True)
 		else:
-			obj.hide_viewport = False
+			obj.hide_set(False)
 
 #------Dop/Cap
 #------Draad/Thread
@@ -448,9 +448,9 @@ class KTXBOTTLE2_OT_Sep(bpy.types.Operator):
 		bpy.ops.object.editmode_toggle()
 
 		if self.hide_cap:
-			obj.hide_viewport = True
+			obj.hide_set(True)
 		else:
-			obj.hide_viewport = False
+			obj.hide_set(False)
 
 
 #------Bottle Body
@@ -516,9 +516,9 @@ class KTXBOTTLE2_OT_Sep(bpy.types.Operator):
 			bpy.context.view_layer.objects.active = obj
 
 			if self.hide_bottle_body:
-				obj.hide_viewport = True
+				obj.hide_set(True)
 			else:
-				obj.hide_viewport = False
+				obj.hide_set(False)
 
 		return {'FINISHED'}
 
