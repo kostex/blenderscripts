@@ -23,7 +23,7 @@ class KTXLIB_OT_Objects(bpy.types.Operator):
 
 	def mode_options(self, context):
 		import os
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(os.path.sys.path[12], 'KTX_Objects.blend')
 		with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
 			return [(ob, ob, "") for ob in data_from.objects]
 
@@ -35,7 +35,7 @@ class KTXLIB_OT_Objects(bpy.types.Operator):
 	def execute(self, context):
 		import os
 		scn = bpy.context.scene
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(os.path.sys.path[12], 'KTX_Objects.blend')
 		with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
 			data_to.objects = [
 				name for name in data_from.objects if name.startswith(self.source)]
@@ -52,7 +52,7 @@ class KTXLIB_MT_ObjectsMenu(bpy.types.Menu):
 
 	def draw(self, context):
 		import os
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(os.path.sys.path[12], 'KTX_Objects.blend')
 
 		layout = self.layout
 		layout.operator_context = 'INVOKE_REGION_WIN'

@@ -403,7 +403,7 @@ class KTXFunction(bpy.types.Operator):
     def execute(self, context):
         msh = bpy.data.meshes.new('KTX Function')
         obj = bpy.data.objects.new('KTX Function', msh)
-        bpy.data.scenes[0].objects.link(obj)
+        bpy.data.scenes[0].collection.objects.link(obj)
         bm = bmesh.new()
 
         if hasattr(bm.verts, "ensure_lookup_table"):
@@ -1035,7 +1035,7 @@ class KTXObjLib(bpy.types.Operator):
 
     def mode_options(self, context):
         import os
-        filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+        filepath = os.path.join(os.path.sys.path[12], 'KTX_Objects.blend')
         with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
             return [(ob, ob, "") for ob in data_from.objects]
 
@@ -1046,7 +1046,7 @@ class KTXObjLib(bpy.types.Operator):
     def execute(self, context):
         import os
         scn = bpy.context.scene
-        filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+        filepath = os.path.join(os.path.sys.path[12], 'KTX_Objects.blend')
         with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
             data_to.objects = [
                 name for name in data_from.objects if name.startswith(self.count)]

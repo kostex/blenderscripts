@@ -85,7 +85,7 @@ def register():
 
 	for cls in classes:
 		register_class(cls)
-	bpy.types.VIEW3D_MT_mesh_add.append(menu_func)
+#	bpy.types.VIEW3D_MT_mesh_add.append(menu_func)
 	bpy.types.NODE_MT_add.append(menu_func)
 
 
@@ -94,7 +94,7 @@ def unregister():
 
 	for cls in classes:
 		unregister_class(cls)
-	bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
+#	bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
 	bpy.types.NODE_MT_add.remove(menu_func)
 
 
