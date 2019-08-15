@@ -138,7 +138,7 @@ def register():
     for cls in classes:
         register_class(cls)
 
-    bpy.types.Scene.ktx_geotoxyz_path = StringProperty(description="Set Search Path for CSV", default="//Users/kostex/Aliases/",subtype="DIR_PATH",update=ktxgeotoxyz_init)
+    bpy.types.Scene.ktx_geotoxyz_path = StringProperty(description="Set Search Path for CSV", default="//Users/kostex/Aliases/SD_Downloads",subtype="DIR_PATH",update=ktxgeotoxyz_init)
     bpy.types.Scene.ktx_filelist = CollectionProperty(type = KTXGEOTOXYZ_File)
     bpy.types.Scene.ktx_fileindex = IntProperty(name="Index for ktx_filelist", default = 0)
 
