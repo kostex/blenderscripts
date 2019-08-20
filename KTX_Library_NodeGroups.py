@@ -1,7 +1,7 @@
 bl_info = {
 	"name": "KTX Library NodeGroups",
 	"author": "Roel Koster",
-	"version": (1, 1),
+	"version": (1, 2),
 	"blender": (2, 80, 0),
 	"location": "View3D > Add > Mesh > KTX Library NodeGroups",
 	"description": "Add Single Selectable NodeGroup from KTX_Objects.blend File in your Scripts Folder",
@@ -23,7 +23,7 @@ class KTXLIB_OT_NodeGroups(bpy.types.Operator):
 
 	def ngr_options(self, context):
 		import os
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(bpy.utils.resource_path('USER'), 'scripts/addons/KTX_Objects.blend')
 		with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
 			return [(ngr, ngr, "") for ngr in data_from.node_groups]
 
@@ -35,7 +35,7 @@ class KTXLIB_OT_NodeGroups(bpy.types.Operator):
 	def execute(self, context):
 		import os
 		scn = bpy.context.scene
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(bpy.utils.resource_path('USER'), 'scripts/addons/KTX_Objects.blend')
 		with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
 			data_to.node_groups = [
 				name for name in data_from.node_groups if name.startswith(self.ngrs)]
@@ -60,7 +60,7 @@ class KTXLIB_MT_NodeGroupsMenu(bpy.types.Menu):
 
 	def draw(self, context):
 		import os
-		filepath = os.path.join(os.path.sys.path[1], 'KTX_Objects.blend')
+		filepath = os.path.join(bpy.utils.resource_path('USER'), 'scripts/addons/KTX_Objects.blend')
 
 		layout = self.layout
 		layout.operator_context = 'INVOKE_REGION_WIN'

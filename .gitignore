@@ -79,5 +79,5 @@ autoflow/
 curves_to_mesh/
 garment_tool/
 mesh_tesselator/
-quick_pipe/
+quick_pipe.py
 speedsculpt_2_80_v_0_1_17/
