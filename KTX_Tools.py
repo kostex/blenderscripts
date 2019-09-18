@@ -648,6 +648,70 @@ class KTXPolarArray(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class KTXPolarArray2(bpy.types.Operator):
+    bl_idname = "wm.ktx_polar_array2"
+    bl_description = "Add polar array 2"
+    bl_label = "KTX Polar Array 2"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
+                                        description="Make a Linked copy",
+                                        default=True)
+    angstep : bpy.props.FloatProperty(name="Angle Step",
+                                       description="Angle Step",
+                                       default=5.0)
+    scale_type : bpy.props.BoolProperty(name="Scale Type Factor/Step",
+                                        description="Factor (True) / Step (False)",
+                                        default=True)
+    scale_factor : bpy.props.FloatProperty(name="Scale Factor",
+                                     description="Scale Factor",
+                                     default=0.95)
+    scale_step : bpy.props.FloatProperty(name="Scale Step",
+                                     description="Scale Step",
+                                     default=0.05)
+    distance : bpy.props.FloatProperty(name="Distance",
+                                  description="Distance of Arrayed Items",
+                                  default=0.1)
+    count : bpy.props.IntProperty(name="Number of Items",
+                                  description="Number of Arrayed Items",
+                                  default=8, min=1, max=200)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self, 'linkedcopy')
+        col.prop(self, 'angstep')
+        col.prop(self, 'scale_type')
+        if self.scale_type:
+            col.prop(self, 'scale_factor')
+        else:
+            col.prop(self, 'scale_step')
+        col.prop(self, 'distance')
+        col.prop(self, 'count')
+
+    def execute(self, context):
+        obj = bpy.context.active_object
+        location = -self.distance
+        if self.scale_type:
+            scale = self.scale_factor
+        else:
+            scale = 1 - self.scale_step
+        rotation = self.angstep
+        for dupli in range(0, self.count):
+            bpy.ops.object.duplicate(linked=self.linkedcopy)
+            obj = bpy.context.active_object
+            obj.location.z = location
+            obj.scale = (scale, scale, 1)
+            obj.rotation_euler = (0, 0, math.radians(rotation))
+            location -= self.distance
+            if self.scale_type:
+                scale = pow(self.scale_factor, dupli + 2)
+            else:
+                scale -= self.scale_step
+            rotation += self.angstep
+        return {'FINISHED'}
+
+
 class KTXPolarArray_old(bpy.types.Operator):
     bl_idname = "wm.ktx_polar_array_old"
     bl_description = "Add polar array (old)"
@@ -1092,6 +1156,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_cylinder_grid")
         new_col().column().operator("wm.ktx_object_grid")
         new_col().column().operator("wm.ktx_polar_array")
+        new_col().column().operator("wm.ktx_polar_array2")
         new_col().column().operator("ktxspiralcircles.execute")
         new_col().column().operator("wm.ktx_spirograph_2")
         new_col().column().operator("wm.ktx_add_random_cubes")
@@ -1131,6 +1196,7 @@ classes = (
     KTXCylinderGrid,
     KTXObjectGrid,
     KTXPolarArray,
+    KTXPolarArray2,
     KTXPolarArray_old,
     KTXPolish,
     KTXSpiroGraph2,
@@ -1141,7 +1207,7 @@ classes = (
 
 def register():
     from bpy.utils import register_class
-    
+
     for cls in classes:
         register_class(cls)
 
