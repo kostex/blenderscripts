@@ -81,3 +81,5 @@ garment_tool/
 mesh_tesselator/
 quick_pipe.py
 speedsculpt_2_80_v_0_1_17/
+BlendLuxCore/
+apriltags_import.py
