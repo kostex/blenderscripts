@@ -635,15 +635,14 @@ class KTXPolarArray(bpy.types.Operator):
                                   default=8)
 
     def execute(self, context):
-        inc = (360 / self.count)
-        angle = math.radians(self.startang)
+        inc = (self.endang-self.startang) / self.count
+        angle = self.startang
         obj = bpy.context.active_object
-        while angle <= self.endang:
-            x = math.sin(math.radians(angle))
-            y = math.cos(math.radians(angle))
-            bpy.ops.object.duplicate(linked=self.linkedcopy)
+        for copies in range(0,self.count):
+            if copies != 0:
+                bpy.ops.object.duplicate(linked=self.linkedcopy)
             obj = bpy.context.active_object
-            obj.rotation_euler = (0, 0, math.radians(-angle))
+            obj.rotation_euler[2] = math.radians(-angle)
             angle += inc
         return {'FINISHED'}
 
@@ -669,9 +668,15 @@ class KTXPolarArray2(bpy.types.Operator):
     scale_step : bpy.props.FloatProperty(name="Scale Step",
                                      description="Scale Step",
                                      default=0.05)
-    distance : bpy.props.FloatProperty(name="Distance",
-                                  description="Distance of Arrayed Items",
+    distance_z : bpy.props.FloatProperty(name="Distance Z",
+                                  description="Z Distance of Arrayed Items",
                                   default=0.1)
+    distance_y : bpy.props.FloatProperty(name="Distance Y",
+                                  description="Y Distance of Arrayed Items",
+                                  default=0.0)
+    distance_x : bpy.props.FloatProperty(name="Distance X",
+                                  description="X Distance of Arrayed Items",
+                                  default=0.0)
     count : bpy.props.IntProperty(name="Number of Items",
                                   description="Number of Arrayed Items",
                                   default=8, min=1, max=200)
@@ -681,17 +686,23 @@ class KTXPolarArray2(bpy.types.Operator):
         col = layout.column()
         col.prop(self, 'linkedcopy')
         col.prop(self, 'angstep')
+        col.separator()
         col.prop(self, 'scale_type')
         if self.scale_type:
             col.prop(self, 'scale_factor')
         else:
             col.prop(self, 'scale_step')
-        col.prop(self, 'distance')
+        col.prop(self, 'distance_x')
+        col.prop(self, 'distance_y')
+        col.prop(self, 'distance_z')
+        col.separator()
         col.prop(self, 'count')
 
     def execute(self, context):
         obj = bpy.context.active_object
-        location = -self.distance
+        location_z = -self.distance_z
+        location_y = self.distance_y
+        location_x = self.distance_x
         if self.scale_type:
             scale = self.scale_factor
         else:
@@ -700,10 +711,15 @@ class KTXPolarArray2(bpy.types.Operator):
         for dupli in range(0, self.count):
             bpy.ops.object.duplicate(linked=self.linkedcopy)
             obj = bpy.context.active_object
-            obj.location.z = location
+            obj.location.x = location_x
+            obj.location.y = location_y
+            obj.location.z = location_z
             obj.scale = (scale, scale, 1)
+
             obj.rotation_euler = (0, 0, math.radians(rotation))
-            location -= self.distance
+            location_z -= self.distance_z
+            location_y += self.distance_y
+            location_z += self.distance_x
             if self.scale_type:
                 scale = pow(self.scale_factor, dupli + 2)
             else:
@@ -786,6 +802,9 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
     csegments : bpy.props.IntProperty(name="Circle Segments",
                                       description="Circle Segments",
                                       default=16)
+    scale : bpy.props.FloatProperty(name="Scale Circles",
+                                     description="Scale circles",
+                                     default=1.0)
 
     def twopcircle(self, point_1, point_2):
         origin_x = (point_1[0] + point_2[0]) / 2.0
@@ -825,7 +844,7 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
                 circ = self.twopcircle(s.verts[-2].co, s.verts[-1].co)
                 if self.cadd:
                     bpy.ops.curve.primitive_bezier_circle_add(
-                        radius=circ[2], location=(circ[0], circ[1], z))
+                        radius=circ[2]*self.scale, location=(circ[0], circ[1], z))
                     obj1 = bpy.context.active_object
                     obj1.data.extrude = self.height
                     obj1.data.dimensions = '2D'
