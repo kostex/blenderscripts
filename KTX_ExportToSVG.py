@@ -18,14 +18,14 @@
 
 import bpy, os
 from bpy.types import Panel
-from bpy.props import StringProperty
+from bpy.props import StringProperty, IntProperty
 
 
 bl_info = {
 	"name": "KTX SVG Exporter",
 	"description": "Export Active Curve to SVG file",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 0, 1),
+	"version": (1, 0, 3),
 	"blender": (2, 80, 0),
 	"location": "Properties > Scene",
 	"warning": "",
@@ -41,7 +41,7 @@ class KTXSVGOUT_OT_ExportToSVG(bpy.types.Operator):
 
 	def execute(self, context):
 		import bpy,os
-		scale = 100
+		scale = context.scene.ktx_svg_out_scale
 		f=open(context.scene.ktx_svg_out_file,"w+")
 		f.write('<svg><path id="output" fill="#000" stroke="none" d="')
 		curve=bpy.context.active_object.data.name
@@ -80,6 +80,7 @@ class KTXSVGOUT_PT_Panel(bpy.types.Panel):
 		scene = context.scene
 
 		layout.prop(scene, "ktx_svg_out_file", text="SVG Output File")
+		layout.prop(scene, "ktx_svg_out_scale", text="Scale")
 		if bpy.context.active_object.type == "CURVE":
 			layout.operator("ktxsvgout.exporttosvg")
 
@@ -90,6 +91,7 @@ classes = (
 
 def register():
 	bpy.types.Scene.ktx_svg_out_file = StringProperty(default="output.svg", subtype="FILE_PATH", description="File")
+	bpy.types.Scene.ktx_svg_out_scale = IntProperty(default=100, description="Scale Factor")
 	from bpy.utils import register_class
 
 	for cls in classes:
@@ -97,6 +99,7 @@ def register():
 
 
 def unregister():
+	del bpy.types.Scene.ktx_svg_out_scale
 	del bpy.types.Scene.ktx_svg_out_file
 	from bpy.utils import unregister_class
 
