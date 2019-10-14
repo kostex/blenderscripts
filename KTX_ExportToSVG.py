@@ -25,7 +25,7 @@ bl_info = {
 	"name": "KTX SVG Exporter",
 	"description": "Export Active Curve to SVG file",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 0, 0),
+	"version": (1, 0, 1),
 	"blender": (2, 80, 0),
 	"location": "Properties > Scene",
 	"warning": "",
@@ -55,7 +55,8 @@ class KTXSVGOUT_OT_ExportToSVG(bpy.types.Operator):
 				line = line + str(s.bezier_points[i+1].handle_right[0]) + "," + str(-s.bezier_points[i+1].handle_right[1]) + " "
 				line = line + str(s.bezier_points[0].handle_left[0]) + "," + str(-s.bezier_points[0].handle_left[1]) + " "
 				line = line + str(s.bezier_points[0].co[0]) + "," + str(-s.bezier_points[0].co[1])
-				line = line + " Z \r\n"
+				line = line + " Z"
+			line = line + "\r\n"
 			f.write(line)
 
 		f.write('"></path></svg>')
