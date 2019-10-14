@@ -16,7 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy,re 
+import bpy,re
 from bpy.types import Panel
 from bpy.props import StringProperty
 
