@@ -25,7 +25,7 @@ bl_info = {
 	"name": "KTX SVG Exporter",
 	"description": "Export Active Curve to SVG file",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 0, 3),
+	"version": (1, 0, 4),
 	"blender": (2, 80, 0),
 	"location": "Properties > Scene",
 	"warning": "",
@@ -43,24 +43,25 @@ class KTXSVGOUT_OT_ExportToSVG(bpy.types.Operator):
 		import bpy,os
 		scale = context.scene.ktx_svg_out_scale
 		f=open(context.scene.ktx_svg_out_file,"w+")
-		f.write('<svg><path id="output" fill="#000" stroke="none" d="')
-		curve=bpy.context.active_object.data.name
-		c = bpy.data.curves[curve]
-		for s in c.splines:
-			line = "M " + str(s.bezier_points[0].co[0] * scale) + "," + str(-s.bezier_points[0].co[1] * scale) + " C "
-			for i in range(0,len(s.bezier_points)-1):
-				line = line + str(s.bezier_points[i].handle_right[0] * scale) + "," + str(-s.bezier_points[i].handle_right[1] * scale) + " "
-				line = line + str(s.bezier_points[i+1].handle_left[0] * scale) + "," + str(-s.bezier_points[i+1].handle_left[1] * scale) + " "
-				line = line + str(s.bezier_points[i+1].co[0] * scale) + "," + str(-s.bezier_points[i+1].co[1] * scale) + " "
-			if s.use_cyclic_u:
-				line = line + str(s.bezier_points[i+1].handle_right[0] * scale) + "," + str(-s.bezier_points[i+1].handle_right[1] * scale) + " "
-				line = line + str(s.bezier_points[0].handle_left[0] * scale) + "," + str(-s.bezier_points[0].handle_left[1] * scale) + " "
-				line = line + str(s.bezier_points[0].co[0] * scale) + "," + str(-s.bezier_points[0].co[1] * scale)
-				line = line + " Z"
-			line = line + "\r\n"
-			f.write(line)
-
-		f.write('"></path></svg>')
+		f.write('<svg>')
+		for selcurv in bpy.context.selected_objects:
+			curve=selcurv.data.name
+			f.write('<path id="' + curve + '" fill="#000" stroke="none" d="')
+			c = bpy.data.curves[curve]
+			for s in c.splines:
+				line = "M " + str(s.bezier_points[0].co[0] * scale) + "," + str(-s.bezier_points[0].co[1] * scale) + " C "
+				for i in range(0,len(s.bezier_points)-1):
+					line = line + str(s.bezier_points[i].handle_right[0] * scale) + "," + str(-s.bezier_points[i].handle_right[1] * scale) + " "
+					line = line + str(s.bezier_points[i+1].handle_left[0] * scale) + "," + str(-s.bezier_points[i+1].handle_left[1] * scale) + " "
+					line = line + str(s.bezier_points[i+1].co[0] * scale) + "," + str(-s.bezier_points[i+1].co[1] * scale) + " "
+				if s.use_cyclic_u:
+					line = line + str(s.bezier_points[i+1].handle_right[0] * scale) + "," + str(-s.bezier_points[i+1].handle_right[1] * scale) + " "
+					line = line + str(s.bezier_points[0].handle_left[0] * scale) + "," + str(-s.bezier_points[0].handle_left[1] * scale) + " "
+					line = line + str(s.bezier_points[0].co[0] * scale) + "," + str(-s.bezier_points[0].co[1] * scale)
+					line = line + " Z"
+				line = line + "\r\n"
+				f.write(line)
+			f.write('"/>')
 		f.close()
 
 		return {'FINISHED'}
