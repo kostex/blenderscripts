@@ -16,16 +16,27 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy, os
+import bpy, os, math
 from bpy.types import Panel
 from bpy.props import StringProperty, IntProperty
+
+def fcol_to_icol(fcol):
+	icol=max(0, min(255, int(math.floor(fcol * 256.0))))
+	return icol
+
+def bcol_to_rgb(bcol):
+	fcol = "#" + \
+		"%0.2X" % fcol_to_icol(bcol[0]) + \
+		"%0.2X" % fcol_to_icol(bcol[1]) + \
+		"%0.2X" % fcol_to_icol(bcol[2])
+	return fcol
 
 
 bl_info = {
 	"name": "KTX SVG Exporter",
 	"description": "Export Active Curve to SVG file",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 0, 4),
+	"version": (1, 0, 5),
 	"blender": (2, 80, 0),
 	"location": "Properties > Scene",
 	"warning": "",
@@ -46,7 +57,11 @@ class KTXSVGOUT_OT_ExportToSVG(bpy.types.Operator):
 		f.write('<svg>')
 		for selcurv in bpy.context.selected_objects:
 			curve=selcurv.data.name
-			f.write('<path id="' + curve + '" fill="#000" stroke="none" d="')
+			if len(selcurv.material_slots) > 0:
+				fcol=bcol_to_rgb(bpy.data.materials[selcurv.material_slots[0].name].diffuse_color)
+			else:
+				fcol="#000"
+			f.write('<path id="' + curve + '" fill="' + fcol + '" stroke="none" d="')
 			c = bpy.data.curves[curve]
 			for s in c.splines:
 				line = "M " + str(s.bezier_points[0].co[0] * scale) + "," + str(-s.bezier_points[0].co[1] * scale) + " C "
