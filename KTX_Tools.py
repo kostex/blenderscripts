@@ -24,13 +24,14 @@ import colorsys
 import bmesh
 import operator
 from mathutils import Vector
-
+from rna_prop_ui import PropertyPanel
+import os
 
 bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 1),
+    "version": (3, 7, 2),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -708,7 +709,7 @@ class KTXPolarArray2(bpy.types.Operator):
         else:
             scale = 1 - self.scale_step
         rotation = self.angstep
-        for dupli in range(0, self.count):
+        for dupli in range(0, self.count - 1):
             bpy.ops.object.duplicate(linked=self.linkedcopy)
             obj = bpy.context.active_object
             obj.location.x = location_x
@@ -725,6 +726,103 @@ class KTXPolarArray2(bpy.types.Operator):
             else:
                 scale -= self.scale_step
             rotation += self.angstep
+        return {'FINISHED'}
+
+
+class KTXPolarArrayClock(bpy.types.Operator):
+    bl_idname = "wm.ktx_polar_array_clock"
+    bl_description = "Add polar array clock"
+    bl_label = "KTX Polar Array Clock"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    extrude : bpy.props.BoolProperty(name="Extrude",
+                                    description="Extrude",
+                                    default=False)
+    height : bpy.props.FloatProperty(name="Height",
+                                    description="Height",
+                                    default=1.0)
+    depth : bpy.props.FloatProperty(name="Depth",
+                                    description="Depth",
+                                    default=2.0)
+    offset : bpy.props.FloatProperty(name="Offset",
+                                    description="Offset",
+                                    default=-2.0)
+    scale_factor : bpy.props.FloatProperty(name="Scale Factor",
+                                     description="Scale Factor",
+                                     default=0.1)
+    radius : bpy.props.FloatProperty(name="Radius",
+                                    description="Radius",
+                                    default=0.9)
+    padding : bpy.props.IntProperty(name="Padding",
+                                  description="Padding",
+                                  default=1, min=1, max=10)
+    rotate : bpy.props.BoolProperty(name="Rotate",
+                                    description="Rotate",
+                                    default=False)
+    readable : bpy.props.BoolProperty(name="Readable",
+                                    description="Readable",
+                                    default=False)
+#    font : bpy.props.StringProperty(name="Font",
+#                                     description="Font Name",
+#                                     default="Bfont")
+    font : bpy.props.StringProperty(name="Font",
+                                     description="Font",
+                                     default=bpy.context.preferences.filepaths.font_directory,
+                                     subtype='FILE_PATH')
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+#        col.prop_search(self, "font", bpy.context.blend_data, "fonts")
+        col.separator()
+        col.prop(self, "font")
+        col.separator()
+        col.prop(self, 'extrude')
+        if (self.extrude):
+            col.prop(self, 'height')
+            col.prop(self, 'offset')
+            col.prop(self, 'depth')
+            col.separator()
+        col.prop(self, 'scale_factor')
+        col.prop(self, 'radius')
+        col.prop(self, 'padding')
+        col.separator()
+        col.prop(self, 'rotate')
+        if (self.rotate):
+            col.prop(self, 'readable')
+
+    def execute(self, context):
+        scale = self.scale_factor
+        number = 1
+        angle = 30
+        coll = bpy.data.collections.new('HourNumbers')
+        bpy.context.scene.collection.children.link(coll)
+        for dupli in range(0, 12):
+            obname = 'clk_' + str(number).zfill(2)
+            newtxt = bpy.data.curves.new(obname, 'FONT')
+            newtxt.body = str(number).zfill(self.padding)
+            newtxt.size = self.scale_factor
+            if os.path.isfile(self.font) and os.path.exists(self.font):
+                newtxt.font = bpy.data.fonts.load(self.font, check_existing=True)
+            if (self.extrude):
+                newtxt.bevel_depth = self.depth/1000
+                newtxt.bevel_resolution = 0
+                newtxt.offset = self.offset/1000
+                newtxt.extrude = self.height/100
+            obj = bpy.data.objects.new(obname, newtxt)
+            obj.location.x = self.radius * math.sin(math.radians(angle))
+            obj.location.y = self.radius * math.cos(math.radians(angle))
+            if (self.rotate):
+                if (self.readable and angle > 90 and angle < 269):
+                    obj.rotation_euler = (0, 0, math.radians(-angle+180))
+                else:
+                    obj.rotation_euler = (0, 0, math.radians(-angle))
+            coll.objects.link(obj)
+            if (self.extrude):
+                bpy.context.view_layer.objects.active=obj
+                bpy.ops.object.modifier_add(type='EDGE_SPLIT')
+            number += 1
+            angle += 30
         return {'FINISHED'}
 
 
@@ -1165,6 +1263,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
     bl_category = "KTX"
     bl_context = "objectmode"
 
+
     def draw(self, context):
         scn = context.scene
         layout = self.layout
@@ -1176,6 +1275,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_object_grid")
         new_col().column().operator("wm.ktx_polar_array")
         new_col().column().operator("wm.ktx_polar_array2")
+        new_col().column().operator("wm.ktx_polar_array_clock")
         new_col().column().operator("ktxspiralcircles.execute")
         new_col().column().operator("wm.ktx_spirograph_2")
         new_col().column().operator("wm.ktx_add_random_cubes")
@@ -1216,7 +1316,8 @@ classes = (
     KTXObjectGrid,
     KTXPolarArray,
     KTXPolarArray2,
-    KTXPolarArray_old,
+    KTXPolarArrayClock,
+#    KTXPolarArray_old,
     KTXPolish,
     KTXSpiroGraph2,
     KTXObjLib,

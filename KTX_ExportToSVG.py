@@ -16,6 +16,19 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+	"name": "KTX SVG Exporter",
+	"description": "Export Active Curve to SVG file",
+	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
+	"version": (1, 0, 7),
+	"blender": (2, 80, 0),
+	"location": "Properties > Scene",
+	"warning": "",
+	"wiki_url": "https://github.com/kostex/blenderscripts/",
+	"tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
+	"category": "Scene"}
+
+
 import bpy, os, math
 from bpy.types import Panel
 from bpy.props import StringProperty, IntProperty
@@ -30,19 +43,6 @@ def bcol_to_rgb(bcol):
 		"%0.2X" % fcol_to_icol(bcol[1]) + \
 		"%0.2X" % fcol_to_icol(bcol[2])
 	return fcol
-
-
-bl_info = {
-	"name": "KTX SVG Exporter",
-	"description": "Export Active Curve to SVG file",
-	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 0, 5),
-	"blender": (2, 80, 0),
-	"location": "Properties > Scene",
-	"warning": "",
-	"wiki_url": "https://github.com/kostex/blenderscripts/",
-	"tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
-	"category": "Scene"}
 
 
 class KTXSVGOUT_OT_ExportToSVG(bpy.types.Operator):
