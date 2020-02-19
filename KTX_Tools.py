@@ -31,7 +31,7 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 3),
+    "version": (3, 7, 4),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -735,6 +735,9 @@ class KTXClockNumbers(bpy.types.Operator):
     bl_label = "KTX Clock Numbers"
     bl_options = {'REGISTER', 'UNDO'}
 
+    mins : bpy.props.BoolProperty(name="Minutes",
+                                    description="Minutes",
+                                    default=False)
     extrude : bpy.props.BoolProperty(name="Extrude",
                                     description="Extrude",
                                     default=False)
@@ -779,6 +782,7 @@ class KTXClockNumbers(bpy.types.Operator):
 #        col.prop_search(self, "font", bpy.context.blend_data, "fonts")
         col.separator()
         col.prop(self, "font")
+        col.prop(self, "mins")
         col.prop(self, "center")
         col.separator()
         col.prop(self, 'extrude')
@@ -797,12 +801,18 @@ class KTXClockNumbers(bpy.types.Operator):
 
     def execute(self, context):
         scale = self.scale_factor
-        number = 1
+        if self.mins:
+            coll = bpy.data.collections.new('MinuteNumbers')
+            ob_pre = 'min_'
+            number = 5
+        else:
+            coll = bpy.data.collections.new('HourNumbers')
+            ob_pre = 'hour_'
+            number = 1
         angle = 30
-        coll = bpy.data.collections.new('HourNumbers')
         bpy.context.scene.collection.children.link(coll)
         for dupli in range(0, 12):
-            obname = 'clk_' + str(number).zfill(2)
+            obname = ob_pre + str(number).zfill(2)
             newtxt = bpy.data.curves.new(obname, 'FONT')
             newtxt.body = str(number).zfill(self.padding)
             newtxt.size = self.scale_factor
@@ -828,7 +838,10 @@ class KTXClockNumbers(bpy.types.Operator):
                     obj.rotation_euler = (0, 0, math.radians(-angle))
             if (self.extrude):
                 bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-            number += 1
+            if self.mins:
+                number += 5
+            else:
+                number += 1
             angle += 30
         bpy.ops.object.select_all(action='DESELECT')
         return {'FINISHED'}
