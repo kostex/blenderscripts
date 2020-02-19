@@ -31,7 +31,7 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 2),
+    "version": (3, 7, 3),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -729,14 +729,17 @@ class KTXPolarArray2(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class KTXPolarArrayClock(bpy.types.Operator):
-    bl_idname = "wm.ktx_polar_array_clock"
-    bl_description = "Add polar array clock"
-    bl_label = "KTX Polar Array Clock"
+class KTXClockNumbers(bpy.types.Operator):
+    bl_idname = "wm.ktx_clocknumbers"
+    bl_description = "Add Clock Numbers"
+    bl_label = "KTX Clock Numbers"
     bl_options = {'REGISTER', 'UNDO'}
 
     extrude : bpy.props.BoolProperty(name="Extrude",
                                     description="Extrude",
+                                    default=False)
+    center : bpy.props.BoolProperty(name="Center",
+                                    description="Center",
                                     default=False)
     height : bpy.props.FloatProperty(name="Height",
                                     description="Height",
@@ -749,7 +752,7 @@ class KTXPolarArrayClock(bpy.types.Operator):
                                     default=-2.0)
     scale_factor : bpy.props.FloatProperty(name="Scale Factor",
                                      description="Scale Factor",
-                                     default=0.1)
+                                     default=0.4)
     radius : bpy.props.FloatProperty(name="Radius",
                                     description="Radius",
                                     default=0.9)
@@ -776,6 +779,7 @@ class KTXPolarArrayClock(bpy.types.Operator):
 #        col.prop_search(self, "font", bpy.context.blend_data, "fonts")
         col.separator()
         col.prop(self, "font")
+        col.prop(self, "center")
         col.separator()
         col.prop(self, 'extrude')
         if (self.extrude):
@@ -810,6 +814,11 @@ class KTXPolarArrayClock(bpy.types.Operator):
                 newtxt.offset = self.offset/1000
                 newtxt.extrude = self.height/100
             obj = bpy.data.objects.new(obname, newtxt)
+            coll.objects.link(obj)
+            bpy.context.view_layer.objects.active=obj
+            obj.select_set(True)
+            if (self.center):
+                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
             obj.location.x = self.radius * math.sin(math.radians(angle))
             obj.location.y = self.radius * math.cos(math.radians(angle))
             if (self.rotate):
@@ -817,12 +826,11 @@ class KTXPolarArrayClock(bpy.types.Operator):
                     obj.rotation_euler = (0, 0, math.radians(-angle+180))
                 else:
                     obj.rotation_euler = (0, 0, math.radians(-angle))
-            coll.objects.link(obj)
             if (self.extrude):
-                bpy.context.view_layer.objects.active=obj
                 bpy.ops.object.modifier_add(type='EDGE_SPLIT')
             number += 1
             angle += 30
+        bpy.ops.object.select_all(action='DESELECT')
         return {'FINISHED'}
 
 
@@ -1273,9 +1281,11 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_cylinders")
         new_col().column().operator("wm.ktx_cylinder_grid")
         new_col().column().operator("wm.ktx_object_grid")
+        new_col().column().separator()
         new_col().column().operator("wm.ktx_polar_array")
         new_col().column().operator("wm.ktx_polar_array2")
-        new_col().column().operator("wm.ktx_polar_array_clock")
+        new_col().column().operator("wm.ktx_clocknumbers")
+        new_col().column().separator()
         new_col().column().operator("ktxspiralcircles.execute")
         new_col().column().operator("wm.ktx_spirograph_2")
         new_col().column().operator("wm.ktx_add_random_cubes")
@@ -1316,7 +1326,7 @@ classes = (
     KTXObjectGrid,
     KTXPolarArray,
     KTXPolarArray2,
-    KTXPolarArrayClock,
+    KTXClockNumbers,
 #    KTXPolarArray_old,
     KTXPolish,
     KTXSpiroGraph2,
