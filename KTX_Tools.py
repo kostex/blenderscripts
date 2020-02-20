@@ -31,7 +31,7 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 4),
+    "version": (3, 7, 5),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -633,18 +633,17 @@ class KTXPolarArray(bpy.types.Operator):
                                      default=360.0)
     count : bpy.props.IntProperty(name="Number of Items",
                                   description="Number of Arrayed Items",
-                                  default=8)
+                                  default=12, min=1)
 
     def execute(self, context):
         inc = (self.endang-self.startang) / self.count
         angle = self.startang
-        obj = bpy.context.active_object
         for copies in range(0,self.count):
-            if copies != 0:
-                bpy.ops.object.duplicate(linked=self.linkedcopy)
             obj = bpy.context.active_object
+            bpy.ops.object.duplicate(linked=self.linkedcopy)
             obj.rotation_euler[2] = math.radians(-angle)
             angle += inc
+        bpy.ops.object.delete()
         return {'FINISHED'}
 
 
@@ -780,7 +779,6 @@ class KTXClockNumbers(bpy.types.Operator):
         layout = self.layout
         col = layout.column()
 #        col.prop_search(self, "font", bpy.context.blend_data, "fonts")
-        col.separator()
         col.prop(self, "font")
         col.prop(self, "mins")
         col.prop(self, "center")
@@ -844,6 +842,59 @@ class KTXClockNumbers(bpy.types.Operator):
                 number += 1
             angle += 30
         bpy.ops.object.select_all(action='DESELECT')
+        return {'FINISHED'}
+
+
+class KTXClockTicks(bpy.types.Operator):
+    bl_idname = "wm.ktx_clockticks"
+    bl_description = "Add Clock Ticks"
+    bl_label = "KTX Clock Ticks"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
+                                        description="Make a Linked copy",
+                                        default=True)
+    count : bpy.props.IntProperty(name="Number of Items",
+                                  description="Number of Arrayed Items",
+                                  default=60, min=1)
+    skip : bpy.props.BoolProperty(name="Skip",
+                                description="Skip At Number Positions",
+                                default=0)
+    skipa : bpy.props.IntProperty(name="Skip Amount",
+                                description="Skip Amount",
+                                default=0)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self, "linkedcopy")
+        col.prop(self, "count")
+        col.prop(self, "skip")
+        if (self.skip):
+            col.prop(self, 'skipa')
+
+    def execute(self, context):
+        inc = 360 / self.count
+        angle = 0
+        if (self.skip and self.skipa > 0):
+            skipangles=[]
+            for i in range(0,390,30):
+                for j in range(-self.skipa,self.skipa + 1):
+                    sangle = i+(j*inc)
+                    if sangle < 0:
+                        sangle = 360 + sangle
+                    skipangles.append(sangle)
+            skipangles=list(dict.fromkeys(skipangles))
+        else:
+            skipangles = [0,30,60,90,120,150,180,210,240,270,300,330,360]
+
+        for copies in range(0,self.count):
+            obj = bpy.context.active_object
+            if not (self.skip and angle in skipangles):
+                bpy.ops.object.duplicate(linked=self.linkedcopy)
+            obj.rotation_euler[2] = math.radians(-angle)
+            angle += inc
+        bpy.ops.object.delete()
         return {'FINISHED'}
 
 
@@ -1298,6 +1349,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_polar_array")
         new_col().column().operator("wm.ktx_polar_array2")
         new_col().column().operator("wm.ktx_clocknumbers")
+        new_col().column().operator("wm.ktx_clockticks")
         new_col().column().separator()
         new_col().column().operator("ktxspiralcircles.execute")
         new_col().column().operator("wm.ktx_spirograph_2")
@@ -1340,6 +1392,7 @@ classes = (
     KTXPolarArray,
     KTXPolarArray2,
     KTXClockNumbers,
+    KTXClockTicks,
 #    KTXPolarArray_old,
     KTXPolish,
     KTXSpiroGraph2,
