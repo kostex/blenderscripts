@@ -827,8 +827,8 @@ class KTXClockNumbers(bpy.types.Operator):
             obj.select_set(True)
             if (self.center):
                 bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-            obj.location.x = self.radius * math.sin(math.radians(angle))
-            obj.location.y = self.radius * math.cos(math.radians(angle))
+            obj.location.x = context.scene.cursor.location.x + self.radius * math.sin(math.radians(angle))
+            obj.location.y = context.scene.cursor.location.y + self.radius * math.cos(math.radians(angle))
             if (self.rotate):
                 if (self.readable and angle > 90 and angle < 269):
                     obj.rotation_euler = (0, 0, math.radians(-angle+180))
