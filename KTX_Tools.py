@@ -31,7 +31,7 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 5),
+    "version": (3, 7, 6),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -829,6 +829,7 @@ class KTXClockNumbers(bpy.types.Operator):
                 bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
             obj.location.x = context.scene.cursor.location.x + self.radius * math.sin(math.radians(angle))
             obj.location.y = context.scene.cursor.location.y + self.radius * math.cos(math.radians(angle))
+            obj.location.z = context.scene.cursor.location.z
             if (self.rotate):
                 if (self.readable and angle > 90 and angle < 269):
                     obj.rotation_euler = (0, 0, math.radians(-angle+180))
@@ -851,9 +852,6 @@ class KTXClockTicks(bpy.types.Operator):
     bl_label = "KTX Clock Ticks"
     bl_options = {'REGISTER', 'UNDO'}
 
-    linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
-                                        description="Make a Linked copy",
-                                        default=True)
     count : bpy.props.IntProperty(name="Number of Items",
                                   description="Number of Arrayed Items",
                                   default=60, min=1)
@@ -867,18 +865,36 @@ class KTXClockTicks(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col.prop(self, "linkedcopy")
         col.prop(self, "count")
         col.prop(self, "skip")
         if (self.skip):
             col.prop(self, 'skipa')
 
     def execute(self, context):
+        verts = [(-0.01,1.0,0.0),(0.01,1.0,0.0),(-0.01,0.9,0.0),(0.01,0.9,0.0)]
+        faces = [(0,1,3,2)]
+
+        bm = bmesh.new()
+        for vert in verts:
+            bm.verts.new(vert)
+        bm.verts.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+        for face_vert in faces:
+            bm.faces.new([bm.verts[face_vert[0]], bm.verts[face_vert[1]], bm.verts[face_vert[2]], bm.verts[face_vert[3]]])
+        bm.edges.ensure_lookup_table()
+
+        coll = bpy.data.collections.new("ClockTicks")
+        bpy.context.scene.collection.children.link(coll)
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[coll.name]
+
+        mesh=bpy.data.meshes.new("Tick")
+        bm.to_mesh(mesh)
+
         inc = 360 / self.count
         angle = 0
         if (self.skip and self.skipa > 0):
             skipangles=[]
-            for i in range(0,390,30):
+            for i in range(0,360,30):
                 for j in range(-self.skipa,self.skipa + 1):
                     sangle = i+(j*inc)
                     if sangle < 0:
@@ -889,12 +905,16 @@ class KTXClockTicks(bpy.types.Operator):
             skipangles = [0,30,60,90,120,150,180,210,240,270,300,330,360]
 
         for copies in range(0,self.count):
-            obj = bpy.context.active_object
             if not (self.skip and angle in skipangles):
-                bpy.ops.object.duplicate(linked=self.linkedcopy)
-            obj.rotation_euler[2] = math.radians(-angle)
+                obj = bpy.data.objects.new("Tick",mesh)
+                bpy.context.collection.objects.link(obj)
+                bpy.context.view_layer.objects.active = obj
+                obj.location.x = context.scene.cursor.location.x
+                obj.location.y = context.scene.cursor.location.y
+                obj.location.z = context.scene.cursor.location.z
+                obj.rotation_euler[2] = math.radians(-angle)
             angle += inc
-        bpy.ops.object.delete()
+
         return {'FINISHED'}
 
 
