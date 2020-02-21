@@ -734,15 +734,35 @@ class KTXClockNumbers(bpy.types.Operator):
     bl_label = "KTX Clock Numbers"
     bl_options = {'REGISTER', 'UNDO'}
 
+#    def origin_type_options(self, context):
+#        return [('GEOMETRY_ORIGIN','Geometry to Origin',"Set Geometry to Origin"),
+#                ('ORIGIN_GEOMETRY','Origin to Geometry',"Set Origin to Geometry"),
+#                ('ORIGIN_CURSOR','Origin to Cursor',"Set Origin to Cursor"),
+#                ('ORIGIN_CENTER_OF_MASS','Origin to Center of Mass',"Set Origin to Center of Mass"),
+#                ('ORIGIN_CENTER_OF_VOLUME','Origin to Center of Volume',"Set Origin tp Center of Volume")
+#                ]
+
+#    def origin_center_options(self, context):
+#        return [('MEDIAN','Median',"Select Center Median"),('BOUNDS','Bounds',"Select Center Bounds")]
+
+#    origin_type : bpy.props.EnumProperty(items=origin_type_options,
+#                                   description="Origin Type",
+#                                   name="Set Origin to this location")
+#    origin_center : bpy.props.EnumProperty(items=origin_center_options,
+#                                   description="Origin Center",
+#                                   name="Set Origin Center this location")
+    show_bounds : bpy.props.BoolProperty(name="Show Bounds",
+                                    description="Show Font Bounds",
+                                    default=False)
     mins : bpy.props.BoolProperty(name="Minutes",
                                     description="Minutes",
                                     default=False)
     extrude : bpy.props.BoolProperty(name="Extrude",
                                     description="Extrude",
                                     default=False)
-    center : bpy.props.BoolProperty(name="Center",
-                                    description="Center",
-                                    default=False)
+#    center : bpy.props.BoolProperty(name="Center",
+#                                    description="Center",
+#                                    default=True)
     height : bpy.props.FloatProperty(name="Height",
                                     description="Height",
                                     default=1.0)
@@ -757,7 +777,7 @@ class KTXClockNumbers(bpy.types.Operator):
                                      default=0.4)
     radius : bpy.props.FloatProperty(name="Radius",
                                     description="Radius",
-                                    default=0.9)
+                                    default=0.8)
     padding : bpy.props.IntProperty(name="Padding",
                                   description="Padding",
                                   default=1, min=1, max=10)
@@ -779,9 +799,14 @@ class KTXClockNumbers(bpy.types.Operator):
         layout = self.layout
         col = layout.column()
 #        col.prop_search(self, "font", bpy.context.blend_data, "fonts")
-        col.prop(self, "font")
         col.prop(self, "mins")
-        col.prop(self, "center")
+        col.prop(self, "font")
+        col.prop(self, "show_bounds")
+        col.separator()
+#        col.prop(self, "center")
+#        if (self.center):
+#            col.prop(self, "origin_type")
+#            col.prop(self, "origin_center")
         col.separator()
         col.prop(self, 'extrude')
         if (self.extrude):
@@ -825,8 +850,9 @@ class KTXClockNumbers(bpy.types.Operator):
             coll.objects.link(obj)
             bpy.context.view_layer.objects.active=obj
             obj.select_set(True)
-            if (self.center):
-                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+#            if (self.center):
+            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='MEDIAN')
+            obj.show_bounds=self.show_bounds
             obj.location.x = context.scene.cursor.location.x + self.radius * math.sin(math.radians(angle))
             obj.location.y = context.scene.cursor.location.y + self.radius * math.cos(math.radians(angle))
             obj.location.z = context.scene.cursor.location.z
@@ -852,6 +878,9 @@ class KTXClockTicks(bpy.types.Operator):
     bl_label = "KTX Clock Ticks"
     bl_options = {'REGISTER', 'UNDO'}
 
+    radius : bpy.props.FloatProperty(name="Radius",
+                                  description="Radius",
+                                  default=1.0, min=0)
     count : bpy.props.IntProperty(name="Number of Items",
                                   description="Number of Arrayed Items",
                                   default=60, min=1)
@@ -865,13 +894,14 @@ class KTXClockTicks(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
+        col.prop(self, "radius")
         col.prop(self, "count")
         col.prop(self, "skip")
         if (self.skip):
             col.prop(self, 'skipa')
 
     def execute(self, context):
-        verts = [(-0.01,1.0,0.0),(0.01,1.0,0.0),(-0.01,0.9,0.0),(0.01,0.9,0.0)]
+        verts = [(-0.01,self.radius,0.0),(0.01,self.radius,0.0),(-0.01,self.radius-0.1,0.0),(0.01,self.radius-0.1,0.0)]
         faces = [(0,1,3,2)]
 
         bm = bmesh.new()
