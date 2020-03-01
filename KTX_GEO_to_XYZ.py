@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX GEO to XYZ",
     "author": "Roel Koster",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (2, 80, 0),
     "location": "View3D > Properties",
     "description": "Imports GEO CSV and converts to XYZ",
@@ -15,7 +15,7 @@ import bpy
 import os, csv
 import math, bmesh
 from bpy.types import UIList, Operator, Menu, Panel, PropertyGroup
-from bpy.props import StringProperty, CollectionProperty, IntProperty
+from bpy.props import BoolProperty, StringProperty, CollectionProperty, IntProperty
 
 
 def to_xyz(lat, lon, alt):
@@ -43,12 +43,14 @@ class KTXGEOTOXYZ_File(PropertyGroup):
         name="Filename",
         description="Filename",
         default="")
+    enabled : BoolProperty()
 
 
 class KTXGEOTOXYZ_UL_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.label(text=item.name, icon='FILE')
+            layout.prop(item, "enabled", text="", index=index)
         elif self.layout.type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon='FILE')
@@ -58,7 +60,7 @@ class KTXGEOTOXYZ_OT_Init(bpy.types.Operator):
     bl_label = "Initialize GEO to XYZ"
     bl_idname = "ktxgeotoxyz.init"
     bl_description = "Initialise the addon"
-    
+
     def execute(self, context):
         ktxgeotoxyz_init(self, context)
         return {'FINISHED'}
@@ -70,38 +72,39 @@ class KTXGEOTOXYZ_OT_Select(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        if scene.ktx_fileindex >=0 and scene.ktx_filelist:
-            item = scene.ktx_filelist[scene.ktx_fileindex]
-#            print(item.name)
-            mesh = bpy.data.meshes.new(item.name)
-            obj = bpy.data.objects.new(item.name, mesh)
-            scene.collection.objects.link(obj)
-            bm = bmesh.new()
-            with open(scene.ktx_geotoxyz_path+item.name) as csv_file:
-                fieldnames = ['Timestamp','UTC','Callsign','Position','Altitude','Speed','Direction']
-                csv_reader = csv.DictReader(csv_file, fieldnames=fieldnames)
-                first = True
-                for row in csv_reader:
-                    if first:
-                        first = False
-                    else:
-                        posdata = row['Position'].split(",")
-                        lat = math.radians(float(posdata[0]))
-                        lon = math.radians(float(posdata[1]))
-                        alt = float(row["Altitude"])/500000 + 10
-                        if alt == 10:
-                            alt = 10.00001
-                        x, y, z = to_xyz(lat, lon, 10)
-                        bm.verts.new((x,y,z))
-                        x, y, z = to_xyz(lat, lon, alt)
-                        bm.verts.new((x,y,z))
-            bm.verts.ensure_lookup_table()
-            for i in range(3,len(bm.verts)-1,2):
-                face = [bm.verts[i-3],bm.verts[i-2],bm.verts[i],bm.verts[i-1]]
-                bm.faces.new(face)
+        for item in scene.ktx_filelist:
+            if item.enabled:
+            #    item = scene.ktx_filelist[scene.ktx_fileindex]
+            #            print(item.name)
+                mesh = bpy.data.meshes.new(item.name)
+                obj = bpy.data.objects.new(item.name, mesh)
+                scene.collection.objects.link(obj)
+                bm = bmesh.new()
+                with open(scene.ktx_geotoxyz_path+item.name) as csv_file:
+                    fieldnames = ['Timestamp','UTC','Callsign','Position','Altitude','Speed','Direction']
+                    csv_reader = csv.DictReader(csv_file, fieldnames=fieldnames)
+                    first = True
+                    for row in csv_reader:
+                        if first:
+                            first = False
+                        else:
+                            posdata = row['Position'].split(",")
+                            lat = math.radians(float(posdata[0]))
+                            lon = math.radians(float(posdata[1]))
+                            alt = float(row["Altitude"])/500000 + 10
+                            if alt == 10:
+                                alt = 10.00001
+                            x, y, z = to_xyz(lat, lon, 10)
+                            bm.verts.new((x,y,z))
+                            x, y, z = to_xyz(lat, lon, alt)
+                            bm.verts.new((x,y,z))
+                bm.verts.ensure_lookup_table()
+                for i in range(3,len(bm.verts)-1,2):
+                    face = [bm.verts[i-3],bm.verts[i-2],bm.verts[i],bm.verts[i-1]]
+                    bm.faces.new(face)
 
-            bm.to_mesh(mesh)
-            obj.data.update()
+                bm.to_mesh(mesh)
+                obj.data.update()
         return {'FINISHED'}
 
 

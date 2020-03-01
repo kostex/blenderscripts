@@ -31,7 +31,7 @@ bl_info = {
     "name": "KTX Tools",
     "description": "Various mesh/material creation tools",
     "author": "Roel Koster, @koelooptiemanna, irc:kostex",
-    "version": (3, 7, 6),
+    "version": (3, 7, 7),
     "blender": (2, 80, 0),
     "location": "",
     "warning": "",
@@ -50,6 +50,10 @@ class KTXAssignRandomDiffuseColors(bpy.types.Operator):
     bl_label = "Rnd Diff. Colors"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def ctype_options(self,context):
+        return [("RGB","RGB","Red Green Blue"),
+                ("HSV","HSV","Hue Saturation Value")]
+
     random_seed : bpy.props.IntProperty(
         name="Random Seed",
         description="Seed value for the random generator",
@@ -57,10 +61,10 @@ class KTXAssignRandomDiffuseColors(bpy.types.Operator):
         max=10000,
         default=0)
 
-    rgb_or_hsv : bpy.props.BoolProperty(
-        name="RGB/HSV",
-        description="RGB or Select to choose HSV",
-        default=False)
+    rgb_or_hsv : bpy.props.EnumProperty(
+        name="Color Type",
+        description="RGB or HSV",
+        items=ctype_options)
 
     rminmax : bpy.props.FloatVectorProperty(
         size=2,
@@ -92,14 +96,16 @@ class KTXAssignRandomDiffuseColors(bpy.types.Operator):
                 g = uniform(self.gminmax[0], self.gminmax[1])
                 b = uniform(self.bminmax[0], self.bminmax[1])
                 m = obj.active_material
-                if self.rgb_or_hsv:
-                    col = colorsys.hsv_to_rgb(r, g, b)
-                    m.node_tree.nodes[1].inputs[0].default_value = (
-                        col[0], col[1], col[2], 1)
-                    obj.active_material.diffuse_color = (col)
-                else:
-                    m.node_tree.nodes[1].inputs[0].default_value = (r, g, b, 1)
-                    obj.active_material.diffuse_color = (r, g, b, 1)
+                for node in m.node_tree.nodes:
+                    if node.type == "BSDF_DIFFUSE" or node.type == "BSDF_PRINCIPLED":
+                        if self.rgb_or_hsv == "HSV":
+                            col = colorsys.hsv_to_rgb(r, g, b)
+                            node.inputs[0].default_value = (col[0], col[1], col[2], 1)
+                            obj.active_material.diffuse_color = (col[0], col[1], col[2],1)
+                        else:
+                            node.inputs[0].default_value = (r, g, b, 1)
+                            obj.active_material.diffuse_color = (r, g, b, 1)
+                        break
         return {'FINISHED'}
 
 
@@ -245,69 +251,65 @@ class KTXAssignMaterials(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class KTXAddGlossyMixShaders(bpy.types.Operator):
-    bl_idname = "wm.ktx_add_glossy_mix_shaders"
-    bl_description = "Add a glossy shader to current shader via mix shader node"
-    bl_label = "Add G/M Shaders"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        unique_mats = []
-        for obj in bpy.context.selected_objects:
-            obj_mat_name = obj.material_slots[0].name
-            if not obj_mat_name in unique_mats:
-                unique_mats.append(obj_mat_name)
-
-        for mat in bpy.data.materials:
-            if mat.name in unique_mats:
-                tree = mat.node_tree
-                nodes = tree.nodes
-                links = tree.links
-                nodes[0].location.x = nodes[0].location.x + 200
-                node_glossy = nodes.new('ShaderNodeBsdfGlossy')
-                node_glossy.location = (10, 150)
-                node_glossy.inputs[1].default_value = 0
-                node_mix = nodes.new('ShaderNodeMixShader')
-                node_mix.location = (300, 300)
-                node_mix.inputs[0].default_value = random.randint(0, 20) / 100
-                links.new(nodes[1].outputs[0], node_mix.inputs[1])
-                links.new(node_glossy.outputs[0], node_mix.inputs[2])
-                links.new(node_mix.outputs[0], nodes[0].inputs[0])
-        return {'FINISHED'}
+#class KTXAddGlossyMixShaders(bpy.types.Operator):
+#    bl_idname = "wm.ktx_add_glossy_mix_shaders"
+#    bl_description = "Add a glossy shader to current shader via mix shader node"
+#    bl_label = "Add G/M Shaders"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    def execute(self, context):
+#        unique_mats = []
+#        for obj in bpy.context.selected_objects:
+#            obj_mat_name = obj.material_slots[0].name
+#            if not obj_mat_name in unique_mats:
+#                unique_mats.append(obj_mat_name)
+#
+#        for mat in bpy.data.materials:
+#            if mat.name in unique_mats:
+#                tree = mat.node_tree
+#                nodes = tree.nodes
+#                links = tree.links
+#                nodes[0].location.x = nodes[0].location.x + 200
+#                node_glossy = nodes.new('ShaderNodeBsdfGlossy')
+#                node_glossy.location = (10, 150)
+#            node_mix.inputs[0].default_value = random.randint(0, 20) / 100
+#                links.new(nodes[1].outputs[0], node_mix.inputs[1])
+#                links.new(node_glossy.outputs[0], node_mix.inputs[2])
+#                links.new(node_mix.outputs[0], nodes[0].inputs[0])
+#        return {'FINISHED'}
 
 
-class KTXAddSubsurfCreases(bpy.types.Operator):
-    bl_idname = "wm.ktx_add_subsurf_creases"
-    bl_description = "Add subsurface modifier to selected objects and assign crease value"
-    bl_label = "Add SubSurf Crsd"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    sub : bpy.props.BoolProperty(name="Sub Surface",
-                                 description="Add Sub Surface",
-                                 default=False)
-
-    viewlevels : bpy.props.IntProperty(name="View Levels",
-                                       description="Viewport Levels",
-                                       default=3, min=1, max=4)
-
-    renderlevels : bpy.props.IntProperty(name="Render Levels",
-                                         description="Render Levels",
-                                         default=3, min=1, max=4)
-
-    creasevalue : bpy.props.FloatProperty(name="Crease Value",
-                                          description="Crease Value",
-                                          default=0.9, min=0.0, max=1.0)
-
-    def execute(self, context):
-        for obj in bpy.data.objects:
-            if obj.type == 'MESH':
-                if self.sub:
-                    mod1 = obj.modifiers.new('sub', 'SUBSURF')
-                    mod1.levels = self.viewlevels
-                    mod1.render_levels = self.renderlevels
-                for i in obj.data.edges:
-                    i.crease = self.creasevalue
-        return {'FINISHED'}
+#class KTXAddSubsurfCreases(bpy.types.Operator):
+#    bl_idname = "wm.ktx_add_subsurf_creases"
+#    bl_description = "Add subsurface modifier to selected objects and assign crease value"
+#    bl_label = "Add SubSurf Crsd"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    sub : bpy.props.BoolProperty(name="Sub Surface",
+#                                 description="Add Sub Surface",
+#                                 default=False)
+#
+#    viewlevels : bpy.props.IntProperty(name="View Levels",
+#                                       description="Viewport Levels",
+#                                       default=3, min=1, max=4)
+#
+#    renderlevels : bpy.props.IntProperty(name="Render Levels",
+#                                         description="Render Levels",
+#                                         default=3, min=1, max=4)
+#
+#    creasevalue : bpy.props.FloatProperty(name="Crease Value",
+#                                          description="Crease Value",
+#                                          default=0.9, min=0.0, max=1.0)
+#
+#    def execute(self, context):
+#        for obj in bpy.data.objects:
+#            if obj.type == 'MESH':
+#                if self.sub:
+#                    mod1 = obj.modifiers.new('sub', 'SUBSURF')
+#                    mod1.render_levels = self.renderlevels
+#                for i in obj.data.edges:
+#                    i.crease = self.creasevalue
+#        return {'FINISHED'}
 
 
 class KTXSetViewportColor(bpy.types.Operator):
@@ -318,59 +320,62 @@ class KTXSetViewportColor(bpy.types.Operator):
 
     def execute(self, context):
         obj = bpy.context.active_object
-        col = obj.material_slots[0].material.node_tree.nodes[1].inputs[0].default_value
-        obj.active_material.diffuse_color = (col[0], col[1], col[2], 1)
+        nodes =  obj.material_slots[0].material.node_tree.nodes
+        for node in nodes:
+            if node.type == 'BSDF_PRINCIPLED' or node.type == 'BSDF_DIFFUSE':
+                col = node.inputs['Color'].default_value
+                obj.active_material.diffuse_color = (col[0], col[1], col[2], 1)
+                break
         return {'FINISHED'}
 
 
-class KTXEraseAllMaterials(bpy.types.Operator):
-    bl_idname = "wm.ktx_erase_all_materials"
-    bl_description = "Erase all unused materials"
-    bl_label = "Erase Unused Mtrls"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        bmat = bpy.data.materials
-        for mat in bmat:
-            #      mat.use_fake_user=False
-            if mat.users < 1:
-                bmat.remove(mat)
-        return {'FINISHED'}
-
-
-class KTXEraseUnusedTextures(bpy.types.Operator):
-    bl_idname = "wm.ktx_erase_unused_textures"
-    bl_description = "Erase unused textures"
-    bl_label = "Erase Unused Txtrs"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        img_names = []
-        textures = bpy.data.textures
-        for tex in textures:
-            if tex.type == 'IMAGE':
-                img_names.append(tex.image.name)
-        imgs = bpy.data.images
-        for image in imgs:
-            name = image.name
-            if name not in img_names:
-                image.user_clear()
-        return {'FINISHED'}
+#class KTXEraseAllMaterials(bpy.types.Operator):
+#    bl_idname = "wm.ktx_erase_all_materials"
+#    bl_description = "Erase all unused materials"
+#    bl_label = "Erase Unused Mtrls"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    def execute(self, context):
+#        bmat = bpy.data.materials
+#        for mat in bmat:
+#            #      mat.use_fake_user=False
+#            if mat.users < 1:
+#                bmat.remove(mat)
+#        return {'FINISHED'}
 
 
-class KTXEraseUnusedPalettes(bpy.types.Operator):
-    bl_idname = "wm.ktx_erase_unused_palettes"
-    bl_description = "Erase unused palettes"
-    bl_label = "Erase Unused Palettes"
-    bl_options = {'REGISTER', 'UNDO'}
+#class KTXEraseUnusedTextures(bpy.types.Operator):
+#    bl_idname = "wm.ktx_erase_unused_textures"
+#    bl_description = "Erase unused textures"
+#    bl_label = "Erase Unused Txtrs"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    def execute(self, context):
+#        img_names = []
+#        textures = bpy.data.textures
+#        for tex in textures:
+#            if tex.type == 'IMAGE':
+#                img_names.append(tex.image.name)
+#        imgs = bpy.data.images
+#        for image in imgs:
+#            if name not in img_names:
+#                image.user_clear()
+#        return {'FINISHED'}
 
-    def execute(self, context):
-        bpal = bpy.data.palettes
-        for pal in bpal:
-            pal.use_fake_user = False
-            if pal.users < 1:
-                bpal.remove(pal)
-        return {'FINISHED'}
+
+#class KTXEraseUnusedPalettes(bpy.types.Operator):
+#    bl_idname = "wm.ktx_erase_unused_palettes"
+#    bl_description = "Erase unused palettes"
+#    bl_label = "Erase Unused Palettes"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    def execute(self, context):
+#        bpal = bpy.data.palettes
+#        for pal in bpal:
+#            pal.use_fake_user = False
+#            if pal.users < 1:
+#                bpal.remove(pal)
+#        return {'FINISHED'}
 
 
 class KTXFunction(bpy.types.Operator):
@@ -451,12 +456,21 @@ class KTXCylinders(bpy.types.Operator):
     bl_label = "KTX Cylinders"
     bl_options = {'REGISTER', 'UNDO'}
 
-    mesh : bpy.props.BoolProperty(name="Mesh/Curve",
-                                  description="on=Mesh, off=Curve",
-                                  default=True)
+    def type_options(self,context):
+        return [("CURVE","Curve","Set Type to Curve"),("MESH","Mesh","Set Type to Mesh")]
+
+    def mode_options(self,context):
+        return [("INCREMENT","Increment","Increment with Factor"),("MULTIPLICATION","Multiplication","Multiply by Factor")]
+
+    def height_options(self,context):
+        return [("TOP","Top","Align to Top"),("CENTER","Center","Align to Center"),("BOTTOM","Bottom","Align to Bottom")]
+
+    type : bpy.props.EnumProperty(name="Mesh/Curve",
+                                  description="Mesh or Curve Mode",
+                                  items=type_options)
     startrad : bpy.props.FloatProperty(name="Start Radius",
                                        description="Cylinder Start Radius",
-                                       default=0.01, min=0.001, precision=4, step=1)
+                                       default=0.06, min=0.001, precision=4, step=1)
     sizefactor : bpy.props.FloatProperty(name="Size Factor",
                                          description="Multiplication Factor",
                                          default=1.7, precision=4, step=1)
@@ -468,17 +482,17 @@ class KTXCylinders(bpy.types.Operator):
                                      default=32)
     startheight : bpy.props.FloatProperty(name="Start Height",
                                           description="Cylinder Start Height",
-                                          default=0.01, precision=4, step=1)
-    heightmode : bpy.props.BoolProperty(name="Height Mode",
-                                        description="off=Increment, on=Multiplication",
-                                        default=True)
+                                          default=0.2, precision=4, step=1)
+    heightmode : bpy.props.EnumProperty(name="Height Mode",
+                                        description="Height Mode",
+                                        items=mode_options)
     heightfactor : bpy.props.FloatProperty(name="Height Factor",
                                            description="Cylinder Height Inc. Factor",
-                                           default=1.1, precision=4, step=1)
-    heightoption : bpy.props.BoolProperty(name="Height Option",
-                                          description="off=from center, on=from bottom",
-                                          default=True)
-    angle : bpy.props.FloatProperty(name="Calculated Angle",
+                                           default=0.28, precision=4, step=1)
+    heightoption : bpy.props.EnumProperty(name="Height Option",
+                                          description="Height Option",
+                                          items=height_options)
+    angle : bpy.props.FloatProperty(name="Angle",
                                     description="Angle is Calculated",
                                     default=1.00000, precision=4)
 
@@ -490,24 +504,26 @@ class KTXCylinders(bpy.types.Operator):
         rad = self.startrad
         height = self.startheight
         for number_of_cylinders in range(0, self.count):
-            if self.heightoption:
+            if self.heightoption == "CENTER":
+                z = 0
+            elif self.heightoption == "BOTTOM":
                 z = height / 2
             else:
-                z = 0
-            if self.mesh:
+                z = -height / 2
+            if self.type == "MESH":
                 bpy.ops.mesh.primitive_cylinder_add(
                     vertices=self.segments, radius=rad, depth=height, location=(x, 0, z))
             else:
                 bpy.ops.curve.primitive_bezier_circle_add(
-                    radius=rad, location=(x, 0, 0))
+                    radius=rad, location=(x, 0, z))
                 obj = bpy.context.active_object
-                obj.data.extrude = height
+                obj.data.extrude = height / 2.0
                 obj.data.dimensions = '2D'
                 obj.data.fill_mode = 'BOTH'
             rad_old = rad
             rad *= self.sizefactor
             x += rad_old + rad
-            if self.heightmode:
+            if self.heightmode == "MULTIPLICATION":
                 height *= self.heightfactor
             else:
                 height += self.heightfactor
@@ -520,9 +536,12 @@ class KTXCylinderGrid(bpy.types.Operator):
     bl_label = "KTX Cylinder Grid"
     bl_options = {'REGISTER', 'UNDO'}
 
-    mesh : bpy.props.BoolProperty(name="Mesh/Curve",
-                                  description="on=Mesh, off=Curve",
-                                  default=True)
+    def type_options(self,context):
+        return [("CURVE","Curve","Set Type to Curve"),("MESH","Mesh","Set Type to Mesh")]
+
+    type : bpy.props.EnumProperty(name="Mesh/Curve",
+                                  description="Mesh or Curve Mode",
+                                  items=type_options)
     radius : bpy.props.FloatProperty(name="Radius",
                                      description="Cylinder Radius",
                                      default=0.01, min=0.001, precision=4, step=1)
@@ -551,14 +570,14 @@ class KTXCylinderGrid(bpy.types.Operator):
             else:
                 x = self.radius
             for u in range(0, self.countx):
-                if self.mesh:
+                if self.type == "MESH":
                     bpy.ops.mesh.primitive_cylinder_add(
                         vertices=self.segments, radius=self.radius + self.radsup, depth=self.height, location=(x, y, 0))
                 else:
                     bpy.ops.curve.primitive_bezier_circle_add(
                         radius=self.radius + self.radsup, location=(x, y, 0))
                     obj = bpy.context.active_object
-                    obj.data.extrude = self.height
+                    obj.data.extrude = self.height/2.0
                     obj.data.dimensions = '2D'
                     obj.data.fill_mode = 'BOTH'
                 x += 2 * self.radius
@@ -573,15 +592,18 @@ class KTXObjectGrid(bpy.types.Operator):
     bl_label = "KTX Object Grid"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def type_options(self,context):
+        return [("TRI","Triangular","Set Array Type to Triangular"),
+            ("SQR","Square","Set Array Type to Square")]
+
+    type : bpy.props.EnumProperty(name="Type",
+                                  description="Triangular or Square",
+                                  items=type_options)
     linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
                                         description="Make a Linked copy",
-                                        default=False)
-    trisq : bpy.props.BoolProperty(name="Triangular or Square",
-                                   description="on=Triangular, off=Square",
-                                   default=True)
-
-    radius : bpy.props.FloatProperty(name="Triangular Distance",
-                                     description="Triangular Distance",
+                                        default=True)
+    radius : bpy.props.FloatProperty(name="Distance",
+                                     description="Distance",
                                      default=0.01, min=0.001, precision=4, step=0.1)
     countx : bpy.props.IntProperty(name="Count X",
                                    description="Number of Cylinders on X-axis",
@@ -596,7 +618,7 @@ class KTXObjectGrid(bpy.types.Operator):
         obj = bpy.context.active_object
         if obj:
             for v in range(0, self.county):
-                if self.trisq:
+                if self.type == "TRI":
                     if operator.mod(v, 2) == 0:
                         x = 0
                     else:
@@ -609,7 +631,7 @@ class KTXObjectGrid(bpy.types.Operator):
                         obj = bpy.context.active_object
                         obj.location = (x, y, 0)
                     x += 2 * self.radius
-                if self.trisq:
+                if self.type == "TRI":
                     y += 2 * self.radius * math.sqrt(0.75)
                 else:
                     y += 2 * self.radius
@@ -624,7 +646,7 @@ class KTXPolarArray(bpy.types.Operator):
 
     linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
                                         description="Make a Linked copy",
-                                        default=False)
+                                        default=True)
     startang : bpy.props.FloatProperty(name="Start Angle",
                                        description="Start Angle",
                                        default=0.0)
@@ -653,15 +675,19 @@ class KTXPolarArray2(bpy.types.Operator):
     bl_label = "KTX Polar Array 2"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def type_options(self,context):
+        return [("FAC","Factor","Set Type Factor"),
+            ("STP","Step","Set Type to Factor")]
+
     linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
                                         description="Make a Linked copy",
                                         default=True)
     angstep : bpy.props.FloatProperty(name="Angle Step",
                                        description="Angle Step",
                                        default=5.0)
-    scale_type : bpy.props.BoolProperty(name="Scale Type Factor/Step",
-                                        description="Factor (True) / Step (False)",
-                                        default=True)
+    scale_type : bpy.props.EnumProperty(name="Scale Type",
+                                        description="Factor or Step Mode",
+                                        items=type_options)
     scale_factor : bpy.props.FloatProperty(name="Scale Factor",
                                      description="Scale Factor",
                                      default=0.95)
@@ -688,7 +714,7 @@ class KTXPolarArray2(bpy.types.Operator):
         col.prop(self, 'angstep')
         col.separator()
         col.prop(self, 'scale_type')
-        if self.scale_type:
+        if self.scale_type == "FAC":
             col.prop(self, 'scale_factor')
         else:
             col.prop(self, 'scale_step')
@@ -703,7 +729,7 @@ class KTXPolarArray2(bpy.types.Operator):
         location_z = -self.distance_z
         location_y = self.distance_y
         location_x = self.distance_x
-        if self.scale_type:
+        if self.scale_type == "FAC":
             scale = self.scale_factor
         else:
             scale = 1 - self.scale_step
@@ -720,7 +746,7 @@ class KTXPolarArray2(bpy.types.Operator):
             location_z -= self.distance_z
             location_y += self.distance_y
             location_z += self.distance_x
-            if self.scale_type:
+            if self.scale_type == "FAC":
                 scale = pow(self.scale_factor, dupli + 2)
             else:
                 scale -= self.scale_step
@@ -823,6 +849,7 @@ class KTXClockNumbers(bpy.types.Operator):
             col.prop(self, 'readable')
 
     def execute(self, context):
+        mtl = bpy.data.materials.new("NumbersMat")
         scale = self.scale_factor
         if self.mins:
             coll = bpy.data.collections.new('MinuteNumbers')
@@ -853,6 +880,8 @@ class KTXClockNumbers(bpy.types.Operator):
 #            if (self.center):
             bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='MEDIAN')
             obj.show_bounds=self.show_bounds
+            obj.active_material = mtl
+            obj.material_slots[mtl.name].material.use_nodes = True
             obj.location.x = context.scene.cursor.location.x + self.radius * math.sin(math.radians(angle))
             obj.location.y = context.scene.cursor.location.y + self.radius * math.cos(math.radians(angle))
             obj.location.z = context.scene.cursor.location.z
@@ -901,6 +930,8 @@ class KTXClockTicks(bpy.types.Operator):
             col.prop(self, 'skipa')
 
     def execute(self, context):
+        mtl = bpy.data.materials.new("TicksMat")
+
         verts = [(-0.01,self.radius,0.0),(0.01,self.radius,0.0),(-0.01,self.radius-0.1,0.0),(0.01,self.radius-0.1,0.0)]
         faces = [(0,1,3,2)]
 
@@ -939,6 +970,8 @@ class KTXClockTicks(bpy.types.Operator):
                 obj = bpy.data.objects.new("Tick",mesh)
                 bpy.context.collection.objects.link(obj)
                 bpy.context.view_layer.objects.active = obj
+                obj.active_material = mtl
+                obj.material_slots[mtl.name].material.use_nodes = True
                 obj.location.x = context.scene.cursor.location.x
                 obj.location.y = context.scene.cursor.location.y
                 obj.location.z = context.scene.cursor.location.z
@@ -988,22 +1021,21 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
     bl_label = "KTX Circles on a spiral"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def ctype_options(self, context):
+        return [("MESH","Mesh","Mesh Mode"),("CURVE","Curve","Curve Mode")]
+
     cadd : bpy.props.BoolProperty(name="Add Circles",
                                   description="Add Circles to Spiral",
                                   default=False)
-    ctype : bpy.props.BoolProperty(name="Segm.Circle/Curve",
-                                   description="on=Segmented Circle, off=Bezier Circle",
-                                   default=False)
-    linkedcopy : bpy.props.BoolProperty(name="Linked Copies",
-                                        description="Make a Linked copy",
-                                        default=False)
+    ctype : bpy.props.EnumProperty(name="Mesh/Curve",
+                                   description="Choose between Mesh or Curve",
+                                   items=ctype_options)
     startrad : bpy.props.FloatProperty(name="Start Radius",
                                        description="Start Radius",
-                                       default=1.0)
+                                       default=1.0,precision=4, step=1)
     rincrement : bpy.props.FloatProperty(name="Radius Increment",
                                          description="Radius Increment",
-                                         default=0.1)
-
+                                         default=0.1,precision=4, step=1)
     startang : bpy.props.FloatProperty(name="Start Angle",
                                        description="Start Angle",
                                        default=0.0)
@@ -1015,16 +1047,16 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
                                         default=10.0)
     zincrement : bpy.props.FloatProperty(name="Z Increment",
                                          description="Z Increment",
-                                         default=0.0)
+                                         default=0.0,precision=4, step=1)
     height : bpy.props.FloatProperty(name="Circle Height",
                                      description="Curve Circle Extrude Height",
-                                     default=0.1)
+                                     default=0.1,precision=4, step=1)
     csegments : bpy.props.IntProperty(name="Circle Segments",
                                       description="Circle Segments",
                                       default=16)
     scale : bpy.props.FloatProperty(name="Scale Circles",
                                      description="Scale circles",
-                                     default=1.0)
+                                     default=1.0,precision=4, step=1)
 
     def twopcircle(self, point_1, point_2):
         origin_x = (point_1[0] + point_2[0]) / 2.0
@@ -1042,6 +1074,25 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
             if not (angle == 0 or angle == round(360 + segments)):
                 s.edges.new((s.verts[-2], s.verts[-1]))
         return('True')
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self,"startrad")
+        col.prop(self,"rincrement")
+        col.prop(self,"startang")
+        col.prop(self,"endang")
+        col.prop(self,"increment")
+        col.prop(self,"zincrement")
+        col.separator()
+        col.prop(self,"cadd")
+        if (self.cadd):
+            col.prop(self,"ctype")
+            col.prop(self,"height")
+            col.prop(self,"scale")
+            if (self.ctype == "MESH"):
+                col.prop(self,"csegments")
+
 
     def execute(self, context):
         import math
@@ -1063,12 +1114,16 @@ class KTXSPIRALCIRCLES_OT_Execute(bpy.types.Operator):
                 s.edges.new((s.verts[-2], s.verts[-1]))
                 circ = self.twopcircle(s.verts[-2].co, s.verts[-1].co)
                 if self.cadd:
-                    bpy.ops.curve.primitive_bezier_circle_add(
-                        radius=circ[2]*self.scale, location=(circ[0], circ[1], z))
-                    obj1 = bpy.context.active_object
-                    obj1.data.extrude = self.height
-                    obj1.data.dimensions = '2D'
-                    obj1.data.fill_mode = 'BOTH'
+                    if self.ctype == "CURVE":
+                        bpy.ops.curve.primitive_bezier_circle_add(
+                            radius=circ[2]*self.scale, location=(circ[0], circ[1], z))
+                        obj1 = bpy.context.active_object
+                        obj1.data.extrude = self.height/2
+                        obj1.data.dimensions = '2D'
+                        obj1.data.fill_mode = 'BOTH'
+                    else:
+                        bpy.ops.mesh.primitive_cylinder_add(
+                            vertices=self.csegments, radius=circ[2]*self.scale, depth=self.height, location=(circ[0], circ[1], z))
 
             r += self.rincrement
             angle += self.increment
@@ -1349,32 +1404,27 @@ class KTXSpiroGraph2(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class KTXObjLib(bpy.types.Operator):
-    bl_idname = "wm.ktx_objlib"
-    bl_description = "Append object from KTX_Objects.blend"
-    bl_label = "KTX Object Library"
+class KTXSetupWatchCam(bpy.types.Operator):
+    bl_idname = "wm.ktx_setup_watchcam"
+    bl_description = "Set Current Camera to Watch Face Design Mode"
+    bl_label = "KTX Watch Cam"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def mode_options(self, context):
-        import os
-        filepath = os.path.join(bpy.utils.resource_path('USER'), 'scripts/addons/KTX_Objects.blend')
-        with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
-            return [(ob, ob, "") for ob in data_from.objects]
-
-    count : bpy.props.EnumProperty(items=mode_options,
-                                   description="KTX Object Library",
-                                   name="Objects found in Library")
-
     def execute(self, context):
-        import os
         scn = bpy.context.scene
-        filepath = os.path.join(bpy.utils.resource_path('USER'), 'scripts/addons/KTX_Objects.blend')
-        with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
-            data_to.objects = [
-                name for name in data_from.objects if name.startswith(self.count)]
-        for obj in data_to.objects:
-            if obj is not None:
-                scn.collection.objects.link(obj)
+        cam = scn.camera.name
+        scn.render.resolution_x = 360
+        scn.render.resolution_y = 360
+        bpy.data.cameras[cam].type='ORTHO'
+        bpy.data.cameras[cam].ortho_scale=2.0
+        bpy.data.cameras[cam].dof.focus_distance=2.0
+
+        bpy.data.objects[cam].location=((0,0,2))
+        bpy.data.objects[cam].rotation_euler=((0,0,0))
+        bpy.data.objects[cam].lock_location=((True,True,True))
+        bpy.data.objects[cam].lock_rotation=((True,True,True))
+        bpy.data.objects[cam].lock_scale=((True,True,True))
+
         return {'FINISHED'}
 
 
@@ -1405,20 +1455,21 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().operator("wm.ktx_spirograph_2")
         new_col().column().operator("wm.ktx_add_random_cubes")
         new_col().column().operator("wm.ktx_add_random_copies")
+#        new_col().column().separator()
+#        new_col().column().operator("wm.ktx_erase_all_materials")
+#        new_col().column().operator("wm.ktx_erase_unused_textures")
+#        new_col().column().operator("wm.ktx_erase_unused_palettes")
         new_col().column().separator()
-        new_col().column().operator("wm.ktx_objlib")
-        new_col().column().separator()
-        new_col().column().operator("wm.ktx_erase_all_materials")
-        new_col().column().operator("wm.ktx_erase_unused_textures")
-        new_col().column().operator("wm.ktx_erase_unused_palettes")
-        new_col().column().separator()
-        new_col().column().operator("wm.ktx_add_subsurf_creases")
+#        new_col().column().operator("wm.ktx_add_subsurf_creases")
         new_col().column().operator("wm.ktx_polish")
         new_col().column().separator()
         new_col().column().operator("wm.ktx_assign_materials")
         new_col().column().operator("wm.ktx_assign_random_diffuse_colors")
         new_col().column().operator("wm.ktx_add_glossy_mix_shaders")
         new_col().column().operator("wm.ktx_set_viewport_color")
+        new_col().column().separator()
+        new_col().column().operator("wm.ktx_setup_watchcam")
+
 
 
 classes = (
@@ -1429,12 +1480,12 @@ classes = (
     KTXAddRandomCubes,
     KTXAddRandomCopies,
     KTXAssignMaterials,
-    KTXAddGlossyMixShaders,
-    KTXAddSubsurfCreases,
+#    KTXAddGlossyMixShaders,
+#    KTXAddSubsurfCreases,
     KTXSetViewportColor,
-    KTXEraseAllMaterials,
-    KTXEraseUnusedTextures,
-    KTXEraseUnusedPalettes,
+#    KTXEraseAllMaterials,
+#    KTXEraseUnusedTextures,
+#    KTXEraseUnusedPalettes,
     KTXFunction,
     KTXCylinders,
     KTXCylinderGrid,
@@ -1446,7 +1497,7 @@ classes = (
 #    KTXPolarArray_old,
     KTXPolish,
     KTXSpiroGraph2,
-    KTXObjLib,
+    KTXSetupWatchCam,
     KTXTOOLS_PT_Panel
 )
 
