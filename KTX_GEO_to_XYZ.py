@@ -1,7 +1,7 @@
 bl_info = {
     "name": "KTX GEO to XYZ",
     "author": "Roel Koster",
-    "version": (1, 1),
+    "version": (1, 2),
     "blender": (2, 80, 0),
     "location": "View3D > Properties",
     "description": "Imports GEO CSV and converts to XYZ",
@@ -15,7 +15,7 @@ import bpy
 import os, csv
 import math, bmesh
 from bpy.types import UIList, Operator, Menu, Panel, PropertyGroup
-from bpy.props import BoolProperty, StringProperty, CollectionProperty, IntProperty
+from bpy.props import BoolProperty, StringProperty, CollectionProperty, IntProperty, FloatProperty
 
 
 def to_xyz(lat, lon, alt):
@@ -91,10 +91,10 @@ class KTXGEOTOXYZ_OT_Select(bpy.types.Operator):
                             posdata = row['Position'].split(",")
                             lat = math.radians(float(posdata[0]))
                             lon = math.radians(float(posdata[1]))
-                            alt = float(row["Altitude"])/500000 + 10
-                            if alt == 10:
-                                alt = 10.00001
-                            x, y, z = to_xyz(lat, lon, 10)
+                            alt = float(row["Altitude"])/scene.ktx_height_scale + scene.ktx_earth_size
+                            if alt == scene.ktx_earth_size:
+                                alt = scene.ktx_earth_size + 0.00001
+                            x, y, z = to_xyz(lat, lon, scene.ktx_earth_size)
                             bm.verts.new((x,y,z))
                             x, y, z = to_xyz(lat, lon, alt)
                             bm.verts.new((x,y,z))
@@ -120,6 +120,8 @@ class KTXGEOTOXYZ_PT_mainPanel(bpy.types.Panel):
 
         scene = context.scene
 
+        layout.prop(scene,"ktx_earth_size",text="Earth Size")
+        layout.prop(scene,"ktx_height_scale",text="Elevation Scale")
         layout.prop(scene,"ktx_geotoxyz_path",text="Path")
         layout.operator("ktxgeotoxyz.init", text="Refresh")
         layout.template_list('KTXGEOTOXYZ_UL_List', "", scene, "ktx_filelist", scene, "ktx_fileindex")
@@ -141,6 +143,8 @@ def register():
     for cls in classes:
         register_class(cls)
 
+    bpy.types.Scene.ktx_earth_size = FloatProperty(name="Set Earth Size", default=100.0)
+    bpy.types.Scene.ktx_height_scale = FloatProperty(name="Set Elevation Scale", default=100000)
     bpy.types.Scene.ktx_geotoxyz_path = StringProperty(description="Set Search Path for CSV", default="//Users/kostex/Aliases/SD_Downloads",subtype="DIR_PATH",update=ktxgeotoxyz_init)
     bpy.types.Scene.ktx_filelist = CollectionProperty(type = KTXGEOTOXYZ_File)
     bpy.types.Scene.ktx_fileindex = IntProperty(name="Index for ktx_filelist", default = 0)
@@ -152,6 +156,8 @@ def unregister():
     del bpy.types.Scene.ktx_fileindex
     del bpy.types.Scene.ktx_filelist
     del bpy.types.Scene.ktx_geotoxyz_path
+    del bpy.types.Scene.ktx_earth_size
+    del bpy.types.Scene.ktx_height_scale
 
     for cls in classes:
         unregister_class(cls)

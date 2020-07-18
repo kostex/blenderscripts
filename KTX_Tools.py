@@ -1427,6 +1427,65 @@ class KTXSetupWatchCam(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class KTXLISSAJOUS_OT_Execute(bpy.types.Operator):
+    bl_idname = "ktxlissajous.execute"
+    bl_description = "Add a 3d Lissajous"
+    bl_label = "KTX Lissajous"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    x_increment : bpy.props.FloatProperty(name="X Angle Increment",
+                                        description="X Angle Increment",
+                                        default=1.0)
+    y_increment : bpy.props.FloatProperty(name="Y Angle Increment",
+                                        description="Y Angle Increment",
+                                        default=1.4)
+    z_increment : bpy.props.FloatProperty(name="Z Angle Increment",
+                                         description="Z Angle Increment",
+                                         default=1.33)
+    count : bpy.props.IntProperty(name="Line Segment Count",
+                                      description="Edge Segments",
+                                      default=3600)
+    radius : bpy.props.FloatProperty(name="Radius",
+                                     description="Circle Radius",
+                                     default=2,precision=1, step=1)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self,"count")
+        col.prop(self,"radius")
+        col.prop(self,"x_increment")
+        col.prop(self,"y_increment")
+        col.prop(self,"z_increment")
+
+    def execute(self, context):
+        msh = bpy.data.meshes.new('KTX_Lissajous')
+        obj = bpy.data.objects.new('KTX_Lissajous', msh)
+        bpy.context.scene.collection.objects.link(obj)
+        s = bmesh.new()
+        i = 0
+        anglex = 0
+        angley = 0
+        anglez = 0
+
+        while i <= self.count:
+            x = math.sin(math.radians(anglex)) * self.radius
+            y = math.cos(math.radians(angley)) * self.radius
+            z = math.sin(math.radians(anglez)) * self.radius
+            s.verts.new((x, y, z))
+            anglex += self.x_increment
+            angley += self.y_increment
+            anglez += self.z_increment
+            i += 1
+
+        s.verts.ensure_lookup_table()
+        for i in range(1, self.count):
+            s.edges.new((s.verts[i-1],s.verts[i]))
+
+        s.to_mesh(msh)
+        obj.data.update()
+        return {'FINISHED'}
+
 
 class KTXTOOLS_PT_Panel(bpy.types.Panel):
     bl_label = "KosteX Tools"
@@ -1453,6 +1512,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().separator()
         new_col().column().operator("ktxspiralcircles.execute")
         new_col().column().operator("wm.ktx_spirograph_2")
+        new_col().column().operator("ktxlissajous.execute")
         new_col().column().operator("wm.ktx_add_random_cubes")
         new_col().column().operator("wm.ktx_add_random_copies")
 #        new_col().column().separator()
@@ -1465,7 +1525,7 @@ class KTXTOOLS_PT_Panel(bpy.types.Panel):
         new_col().column().separator()
         new_col().column().operator("wm.ktx_assign_materials")
         new_col().column().operator("wm.ktx_assign_random_diffuse_colors")
-        new_col().column().operator("wm.ktx_add_glossy_mix_shaders")
+#        new_col().column().operator("wm.ktx_add_glossy_mix_shaders")
         new_col().column().operator("wm.ktx_set_viewport_color")
         new_col().column().separator()
         new_col().column().operator("wm.ktx_setup_watchcam")
@@ -1498,6 +1558,7 @@ classes = (
     KTXPolish,
     KTXSpiroGraph2,
     KTXSetupWatchCam,
+    KTXLISSAJOUS_OT_Execute,
     KTXTOOLS_PT_Panel
 )
 
