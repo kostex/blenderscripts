@@ -1,7 +1,4 @@
 # XPlaneImport
-Imports XPlane .obj files into Blender 2.78
+Imports XPlane .obj files into Blender 2.9x
 
-Download latest release at https://github.com/daveprue/XPlaneImport/releases
-
-Report any issues at https://github.com/daveprue/XPlaneImport/issues
-
+Adapted by Roel Koster
