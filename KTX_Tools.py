@@ -1415,6 +1415,7 @@ class KTXSetupWatchCam(bpy.types.Operator):
         cam = scn.camera.name
         scn.render.resolution_x = 360
         scn.render.resolution_y = 360
+        scn.render.resolution_percentage = 100
         bpy.data.cameras[cam].type='ORTHO'
         bpy.data.cameras[cam].ortho_scale=2.0
         bpy.data.cameras[cam].dof.focus_distance=2.0

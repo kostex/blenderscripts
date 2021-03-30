@@ -16,7 +16,6 @@ MirrorMirrorTool.py
 RenderManForBlender-master/
 TheGroveRelease3.py
 TheGroveSeedsRelease3/
-XPlaneImport-master/
 __pycache__/
 add_mesh_solid.py
 animation_delicode_ni_mate_tools.py
@@ -99,3 +98,13 @@ extra_lights-master/
 photographer/
 poliigon-material-converter/
 slcad_transform/
+Cablerator/
+HDRLightStudioConnection/
+QuadWrap_v1_1.py
+SuperImageDenoiser/
+tissue-b290-dev/
+uvpackmaster2/
+tissue/
+quad_remesher_1_1/
+MB-Lab-1_7_8/
+HumGen3D/
