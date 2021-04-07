@@ -33,7 +33,7 @@
 bl_info = {
     "name": "Import X-Plane OBJ",
     "author": "Roel Koster <koelooptiemanna@gmail.com",
-    "version": (1,0,2),
+    "version": (1,0,3),
     "blender": (2,80,0),
     "api": 36273,
     "location": "File > Import/Export > XPlane",

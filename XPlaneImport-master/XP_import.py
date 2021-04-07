@@ -129,31 +129,38 @@ class XPlaneImport(bpy.types.Operator):
             if(line[0] == 'TEXTURE'):
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
+                cont = True
                 if(os.path.exists(texfullname) == False):
                     texfullname = "%s/%s" % (os.path.dirname(self.filepath), os.path.splitext(texfilename)[0]+'.dds')
+                    if(os.path.exists(texfullname) == False):
+                        cont = False
 
                 node_texture = nodes.new('ShaderNodeTexImage')
                 node_texture.location.x = nodes[0].location.x - 600
                 node_texture.location.y = nodes[0].location.y
 
-                texdif = bpy.data.images.load(texfullname)
-                node_texture.image = texdif
+                if cont:
+                    texdif = bpy.data.images.load(texfullname)
+                    node_texture.image = texdif
                 links.new(node_texture.outputs[0], nodes[0].inputs[0])
 
             if(line[0] == 'TEXTURE_NORMAL'):
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
-
+                cont = True
                 if(os.path.exists(texfullname) == False):
                     texfullname = "%s/%s" % (os.path.dirname(self.filepath), os.path.splitext(texfilename)[0]+'.dds')
+                    if(os.path.exists(texfullname) == False):
+                        cont = False
 
                 node_texture = nodes.new('ShaderNodeTexImage')
                 node_texture.location.x = nodes[0].location.x - 600
                 node_texture.location.y = nodes[0].location.y - 300
 
-                texnml = bpy.data.images.load(texfullname)
-                node_texture.image = texnml
-                texnml.colorspace_settings.name='Non-Color'
+                if cont:
+                    texnml = bpy.data.images.load(texfullname)
+                    node_texture.image = texnml
+                    texnml.colorspace_settings.name='Non-Color'
 
                 node_nmlmap = nodes.new('ShaderNodeNormalMap')
                 node_nmlmap.location.x = nodes[0].location.x - 300
@@ -164,15 +171,19 @@ class XPlaneImport(bpy.types.Operator):
             if(line[0] == 'TEXTURE_LIT'):
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
+                cont = True
                 if(os.path.exists(texfullname) == False):
                     texfullname = "%s/%s" % (os.path.dirname(self.filepath), os.path.splitext(texfilename)[0]+'.dds')
+                    if(os.path.exists(texfullname) == False):
+                        cont = False
 
                 node_texture = nodes.new('ShaderNodeTexImage')
                 node_texture.location.x = nodes[0].location.x - 900
                 node_texture.location.y = nodes[0].location.y
 
-                texlit = bpy.data.images.load(texfullname)
-                node_texture.image = texlit
+                if cont:
+                    texlit = bpy.data.images.load(texfullname)
+                    node_texture.image = texlit
 
             if(line[0] == 'VT'):
                 vx = float(line[1])
