@@ -126,7 +126,8 @@ class XPlaneImport(bpy.types.Operator):
             if (len(line) == 0):
                 continue
 
-            if(line[0] == 'TEXTURE'):
+            if(line[0] == 'TEXTURE' and len(line) > 1):
+                print(len(line))
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
                 cont = True
@@ -144,7 +145,8 @@ class XPlaneImport(bpy.types.Operator):
                     node_texture.image = texdif
                 links.new(node_texture.outputs[0], nodes[0].inputs[0])
 
-            if(line[0] == 'TEXTURE_NORMAL'):
+            if(line[0] == 'TEXTURE_NORMAL' and len(line) > 1):
+                print(len(line))
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
                 cont = True
@@ -168,7 +170,8 @@ class XPlaneImport(bpy.types.Operator):
                 links.new(node_texture.outputs[0], node_nmlmap.inputs[1])
                 links.new(node_nmlmap.outputs[0], nodes[0].inputs[20])
 
-            if(line[0] == 'TEXTURE_LIT'):
+            if(line[0] == 'TEXTURE_LIT' and len(line) > 1):
+                print(len(line))
                 texfilename = line[1]
                 texfullname = "%s/%s" % (os.path.dirname(self.filepath), texfilename)
                 cont = True
