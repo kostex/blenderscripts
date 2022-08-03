@@ -67,7 +67,18 @@ class KTXRENDERSLOT_OT_Select(Operator):
 
 	def execute(self, context):
 		bpy.data.images['Render Result'].render_slots.active_index = self.number
+		return {'FINISHED'}
 
+
+class KTXRENDERSLOT_OT_Refresh(Operator):
+	bl_label = "Refresh Render Slots"
+	bl_idname = "ktxrenderslot.refresh"
+	bl_description = ("Refresh Render Slots\n"
+					  "When adding renderslots elsewhere"
+					  "you need to do this, or render an image")
+
+	def execute(self, context):
+		checkslots(context.scene);
 		return {'FINISHED'}
 
 
@@ -92,18 +103,6 @@ def checkslots(scene):
 
 	scene.ktx_occupied_render_slots.data = slots
 	img.render_slots.active_index = active
-
-def updateslots(scene):
-	img = bpy.data.images['Render Result']
-	slots = ''
-	for i in range(0,len(img.render_slots)):
-		img.render_slots.active_index = i
-		try:
-			img.save_render(nullpath)
-			slots = slots + '1'
-		except RuntimeError:
-			slots = slots + '0'
-	scene.ktx_occupied_render_slots.data = slots
 
 
 def ui(self, context):
@@ -132,10 +131,13 @@ def ui(self, context):
 			items=0
 			row = layout.row(align=True)
 			row.alignment = 'EXPAND'
-
+	row = layout.row(align=True)
+	row.alignment = 'EXPAND'
+	row.operator('ktxrenderslot.refresh')
 
 classes = (
 	KTXRENDERSLOT_OT_Select,
+	KTXRENDERSLOT_OT_Refresh,
 	KTXRENDERSLOT_Prefs
 )
 
