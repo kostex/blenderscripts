@@ -27,7 +27,7 @@ bl_info = {
 	"name": "KTX RenderSlot",
 	"description": "Display/select renderslot in the render tab",
 	"author": "Roel Koster, @koelooptiemanna, irc:kostex",
-	"version": (1, 3, 4),
+	"version": (1, 3, 5),
 	"blender": (2, 80, 0),
 	"location": "Properties Editor > Render > Render",
 	"warning": "",
@@ -93,6 +93,18 @@ def checkslots(scene):
 	scene.ktx_occupied_render_slots.data = slots
 	img.render_slots.active_index = active
 
+def updateslots(scene):
+	img = bpy.data.images['Render Result']
+	slots = ''
+	for i in range(0,len(img.render_slots)):
+		img.render_slots.active_index = i
+		try:
+			img.save_render(nullpath)
+			slots = slots + '1'
+		except RuntimeError:
+			slots = slots + '0'
+	scene.ktx_occupied_render_slots.data = slots
+
 
 def ui(self, context):
 	scn = context.scene
@@ -108,7 +120,10 @@ def ui(self, context):
 	row.alignment = 'EXPAND'
 	for i in range(0,len(img.render_slots)):
 		is_active = bool(i == active)
-		test_active = bool(scn.ktx_occupied_render_slots.data[i] == '1')
+		try:
+			test_active = bool(scn.ktx_occupied_render_slots.data[i] == '1')
+		except:
+			test_active = False #manually added slots before a render, unknown to OccupiedSlots
 		icons = "LAYER_ACTIVE" if test_active else "BLANK1"
 		label = "[{}]".format(str(i + 1)) if is_active else str(i + 1)
 		row.operator('ktxrenderslot.select', text=label, icon=icons).number = i
